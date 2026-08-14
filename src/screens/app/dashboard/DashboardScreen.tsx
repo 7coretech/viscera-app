@@ -109,13 +109,11 @@ const DashboardScreen = () => {
         appService.getApplicantJobs('apply')
       ]);
 
-      if (savedRes.data) {
-        const count = Object.keys(savedRes.data).filter(k => !isNaN(Number(k))).length;
-        setSavedCount(count);
+      if (savedRes.data && Array.isArray(savedRes.data.data)) {
+        setSavedCount(savedRes.data.data.length);
       }
-      if (appliedRes.data) {
-        const count = Object.keys(appliedRes.data).filter(k => !isNaN(Number(k))).length;
-        setAppliedCount(count);
+      if (appliedRes.data && Array.isArray(appliedRes.data.data)) {
+        setAppliedCount(appliedRes.data.data.length);
       }
     } catch (error) {
       console.log("Error fetching job counts:", error);

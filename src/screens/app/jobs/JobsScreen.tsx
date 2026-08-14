@@ -73,19 +73,15 @@ const JobsScreen = () => {
     try {
       // Fetch applied
       const appliedRes = await appService.getApplicantJobs('apply');
-      if (appliedRes.data) {
-        const appliedIds = Object.keys(appliedRes.data)
-          .filter(k => !isNaN(Number(k)))
-          .map(k => appliedRes.data[k].jobId);
+      if (appliedRes.data && Array.isArray(appliedRes.data.data)) {
+        const appliedIds = appliedRes.data.data.map((item: any) => item.jobId);
         setAppliedJobs(appliedIds);
       }
 
       // Fetch saved
       const savedRes = await appService.getApplicantJobs('save');
-      if (savedRes.data) {
-        const savedIds = Object.keys(savedRes.data)
-          .filter(k => !isNaN(Number(k)))
-          .map(k => savedRes.data[k].jobId);
+      if (savedRes.data && Array.isArray(savedRes.data.data)) {
+        const savedIds = savedRes.data.data.map((item: any) => item.jobId);
         setSavedJobs(savedIds);
       }
     } catch (error) {
@@ -114,10 +110,8 @@ const JobsScreen = () => {
         }
         const type = activeTab === "Applied" ? "apply" : "save";
         const res = await appService.getApplicantJobs(type);
-        if (res.data) {
-          const entries = Object.keys(res.data)
-            .filter(k => !isNaN(Number(k)))
-            .map(k => res.data[k]);
+        if (res.data && Array.isArray(res.data.data)) {
+          const entries = res.data.data;
 
           const detailedJobs = await Promise.all(entries.map(async (entry: any) => {
             if (!entry.jobId) return null;

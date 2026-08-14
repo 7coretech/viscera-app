@@ -33,9 +33,8 @@ const JobDetailsScreen = () => {
     if (!accessToken) return;
     try {
       const appliedRes = await appService.getApplicantJobs('apply');
-      if (appliedRes.data) {
-        // The API returns an array or object containing applied jobs. 
-        const appliedItems = Object.values(appliedRes.data);
+      if (appliedRes.data && Array.isArray(appliedRes.data.data)) {
+        const appliedItems = appliedRes.data.data;
         const match = appliedItems.find((item: any) => item.jobId === jobId) as any;
         if (match) {
           setIsApplied(true);
@@ -51,8 +50,8 @@ const JobDetailsScreen = () => {
     if (!accessToken) return;
     try {
       const savedRes = await appService.getApplicantJobs('save');
-      if (savedRes.data) {
-        const isFound = Object.values(savedRes.data).some((item: any) => item.jobId === jobId);
+      if (savedRes.data && Array.isArray(savedRes.data.data)) {
+        const isFound = savedRes.data.data.some((item: any) => item.jobId === jobId);
         setIsSaved(isFound);
       }
     } catch (error) {
@@ -265,15 +264,14 @@ const JobDetailsScreen = () => {
       <View className="px-4 pb-6 mt-auto bg-white pt-4">
         <View className="flex-row gap-3">
           <TouchableOpacity
-            disabled={chatLoading || !isApplied}
+            disabled={chatLoading}
             onPress={handleStartChat}
-            className={`flex-1 h-12 rounded-xl border items-center justify-center ${!isApplied ? "border-gray-medium opacity-50" : "border-primary-main"
-              }`}
+            className={`flex-1 h-12 rounded-xl border items-center justify-center border-primary-main`}
           >
             {chatLoading ? (
               <ActivityIndicator color="#0141C5" />
             ) : (
-              <Text className={`${!isApplied ? "text-text-secondary" : "text-primary-main"} font-semibold`}>
+              <Text className="text-primary-main font-semibold">
                 Message Recruiter
               </Text>
             )}
