@@ -35,7 +35,7 @@ const JobDetailsScreen = () => {
       const appliedRes = await appService.getApplicantJobs('apply');
       if (appliedRes.data && Array.isArray(appliedRes.data.data)) {
         const appliedItems = appliedRes.data.data;
-        const match = appliedItems.find((item: any) => item.jobId === jobId) as any;
+        const match = appliedItems.find((item: any) => item.id === jobId) as any;
         if (match) {
           setIsApplied(true);
           setApplicationId(match.id || match._id || null);
@@ -51,7 +51,7 @@ const JobDetailsScreen = () => {
     try {
       const savedRes = await appService.getApplicantJobs('save');
       if (savedRes.data && Array.isArray(savedRes.data.data)) {
-        const isFound = savedRes.data.data.some((item: any) => item.jobId === jobId);
+        const isFound = savedRes.data.data.some((item: any) => item.id === jobId);
         setIsSaved(isFound);
       }
     } catch (error) {

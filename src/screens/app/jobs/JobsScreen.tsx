@@ -74,14 +74,14 @@ const JobsScreen = () => {
       // Fetch applied
       const appliedRes = await appService.getApplicantJobs('apply');
       if (appliedRes.data && Array.isArray(appliedRes.data.data)) {
-        const appliedIds = appliedRes.data.data.map((item: any) => item.jobId);
+        const appliedIds = appliedRes.data.data.map((item: any) => item.id);
         setAppliedJobs(appliedIds);
       }
 
       // Fetch saved
       const savedRes = await appService.getApplicantJobs('save');
       if (savedRes.data && Array.isArray(savedRes.data.data)) {
-        const savedIds = savedRes.data.data.map((item: any) => item.jobId);
+        const savedIds = savedRes.data.data.map((item: any) => item.id);
         setSavedJobs(savedIds);
       }
     } catch (error) {
@@ -112,18 +112,7 @@ const JobsScreen = () => {
         const res = await appService.getApplicantJobs(type);
         if (res.data && Array.isArray(res.data.data)) {
           const entries = res.data.data;
-
-          const detailedJobs = await Promise.all(entries.map(async (entry: any) => {
-            if (!entry.jobId) return null;
-            try {
-              const jobRes = await appService.getJobDetails(entry.jobId);
-              return jobRes.data.data ? { ...jobRes.data.data, id: entry.jobId } : null;
-            } catch (err) {
-              console.log(`Failed to fetch details for ${entry.jobId}`, err);
-              return null;
-            }
-          }));
-          setJobs(detailedJobs.filter(j => j !== null));
+          setJobs(res.data.data);
         }
       }
     } catch (error) {

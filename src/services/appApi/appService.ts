@@ -90,9 +90,9 @@ export const appService = {
     getJobDetails: (id: string) => apiClient.get(`${APP_ENDPOINTS.JOBS}/${id}`),
 
     // Applicant Methods
-    getApplicantJobs: (type: 'save' | 'apply') => apiClient.get(`${APP_ENDPOINTS.APPLICANT}/?type=${type}`),
-    saveJob: (data: { jobId: string }) => apiClient.post(`${APP_ENDPOINTS.APPLICANT}/save`, data),
-    applyJob: (data: { jobId: string, status: string }) => apiClient.post(APP_ENDPOINTS.APPLY, data),
+    getApplicantJobs: (type: 'save' | 'apply') => apiClient.get(type === 'save' ? '/api/v1/jobs/me?type=SAVED' : '/api/v1/jobs/me?type=APPLIED'),
+    saveJob: (data: { jobId: string }) => apiClient.post(`/api/v1/jobs/${data.jobId}/save`, data),
+    applyJob: (data: { jobId: string, status: string }) => apiClient.post(`/api/v1/applications/job/${data.jobId}/apply`, data),
 };
 
 export default {
