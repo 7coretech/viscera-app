@@ -231,7 +231,7 @@ const Skills = () => {
                       className="px-4 py-3"
                     >
                       <Text className="text-body1 font-medium" style={{ color: textColor }}>
-                        Add "{input}"
+                        Add &quot;{input}&quot;
                       </Text>
                     </TouchableOpacity>
                   )}

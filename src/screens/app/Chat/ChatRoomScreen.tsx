@@ -19,7 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const ChatRoomScreen = () => {
   const router = useRouter();
-  const { conversationId, name, avatar } = useLocalSearchParams();
+  const { conversationId, name, avatar, jobTitle } = useLocalSearchParams();
   const flatListRef = useRef<FlatList>(null);
 
   const [messages, setMessages] = useState<any[]>([]);
@@ -37,32 +37,58 @@ const ChatRoomScreen = () => {
 
     // Listen for new messages
     socketService.onNewMessage((newMessage) => {
-      setMessages((prev) => [...prev, newMessage]);
+      setMessages((prev) => {
+        const id = newMessage.id || newMessage._id || newMessage.messageId;
+        const exists = prev.some(
+          (m) => (m.id || m._id || m.messageId) === id && id
+        );
+        if (exists) return prev;
+        return [...prev, newMessage];
+      });
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
     });
 
+    // Also poll messages every 5 seconds for reliability
+    const interval = setInterval(() => {
+      if (conversationId) {
+        chatService
+          .getMessages(conversationId as string)
+          .then((res) => {
+            const list = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
+            if (Array.isArray(list) && list.length > 0) {
+              setMessages(list);
+            }
+          })
+          .catch(() => {});
+      }
+    }, 5000);
+
     return () => {
       socketService.offNewMessage();
+      clearInterval(interval);
     };
   }, [conversationId]);
 
   const loadInitialData = async () => {
     try {
-      // Get current user ID to distinguish "me" vs "them"
-      const userStr = await AsyncStorage.getItem('user');
+      const userStr = await AsyncStorage.getItem("user");
       if (userStr) {
         const user = JSON.parse(userStr);
-        setCurrentUserId(user.id || user._id);
+        setCurrentUserId(user.userId || user.id || user._id);
       }
 
       if (conversationId) {
         const response = await chatService.getMessages(conversationId as string);
-        setMessages(response.data || []);
+        const list =
+          response?.data?.data ||
+          response?.data ||
+          (Array.isArray(response) ? response : []);
+        setMessages(Array.isArray(list) ? list : []);
       }
     } catch (error) {
-      console.error("Error loading chat data:", error);
+      console.log("Error loading chat data:", error);
     } finally {
       setLoading(false);
       setTimeout(() => {
@@ -74,80 +100,134 @@ const ChatRoomScreen = () => {
   const handleSend = async (text: string) => {
     if (!text.trim() || !conversationId) return;
 
+    const tempMsg = {
+      id: `temp-${Date.now()}`,
+      content: text,
+      from: currentUserId,
+      timestamp: new Date().toISOString(),
+      isMe: true,
+    };
+    setMessages((prev) => [...prev, tempMsg]);
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 50);
+
     try {
-      // Send via API as requested for reliability
       await chatService.sendMessage(conversationId as string, text);
-      // Note: The socket will automatically receive the "new_message" event and update the UI
+      const res = await chatService.getMessages(conversationId as string);
+      const list = res?.data?.data || res?.data || [];
+      if (Array.isArray(list)) {
+        setMessages(list);
+      }
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.log("Error sending message:", error);
     }
   };
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color="#000" />
-      </View>
+      <SafeAreaView className="flex-1 justify-center items-center bg-gray-white">
+        <ActivityIndicator size="large" color="#0141C5" />
+      </SafeAreaView>
     );
   }
 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <SafeAreaView className="flex-1 bg-gray-white">
+        {/* Header */}
         <View className="w-full flex-row items-center px-4 py-3 bg-white border-b border-gray-light">
-          <TouchableOpacity onPress={() => router.back()} className="mr-3">
-            <Ionicons name="arrow-back" size={22} color="#000" />
+          <TouchableOpacity onPress={() => router.back()} className="mr-3 p-1">
+            <Ionicons name="arrow-back" size={22} color="#1F2937" />
           </TouchableOpacity>
 
           <Image
-            source={{ uri: avatar as string }}
-            className="w-12 h-12 rounded-full mr-3"
+            source={{
+              uri: (avatar as string) || "https://i.pravatar.cc/150",
+            }}
+            className="w-10 h-10 rounded-full mr-3 border border-gray-light"
           />
 
-          <View>
-            <Text className="text-h4 font-semibold text-text-primary">
-              {name}
+          <View className="flex-1">
+            <Text className="text-body1 font-bold text-text-primary" numberOfLines={1}>
+              {name || "Recruiter"}
             </Text>
-            <Text className="text-caption  text-action-green font-semibold">
-              Online
-            </Text>
+            {jobTitle ? (
+              <Text className="text-caption text-primary-main font-medium" numberOfLines={1}>
+                {jobTitle}
+              </Text>
+            ) : (
+              <Text className="text-caption text-action-green font-semibold">
+                Active
+              </Text>
+            )}
           </View>
         </View>
 
+        {/* Message Thread */}
         <FlatList
           ref={flatListRef}
           data={messages}
-          keyExtractor={(item, index) => item.id?.toString() || index.toString()}
-          contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
+          keyExtractor={(item, index) =>
+            item.id?.toString() ||
+            item._id?.toString() ||
+            item.messageId?.toString() ||
+            index.toString()
+          }
+          contentContainerStyle={{ padding: 16, paddingBottom: 30 }}
           keyboardShouldPersistTaps="handled"
+          ListEmptyComponent={
+            <View className="py-20 items-center justify-center">
+              <Text className="text-small text-text-secondary">
+                No messages yet. Send a message to get started!
+              </Text>
+            </View>
+          }
           renderItem={({ item }) => {
-            const isMe = item.from === currentUserId || item.senderId === currentUserId || item.isMe;
+            const isMe =
+              Boolean(item.isMe) ||
+              String(item.from || "").toLowerCase() ===
+                String(currentUserId || "").toLowerCase() ||
+              String(item.senderId || "").toLowerCase() ===
+                String(currentUserId || "").toLowerCase();
+
+            const timeStr = item.timestamp
+              ? new Date(item.timestamp).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : item.time || "";
+
             return (
               <View
-                className={`mb-3 max-w-[75%] ${isMe ? "self-end items-end" : "self-start items-start"
-                  }`}
+                className={`mb-3 max-w-[80%] ${
+                  isMe ? "self-end items-end" : "self-start items-start"
+                }`}
               >
                 <View
-                  className={`px-4 py-3 rounded-2xl ${isMe
-                    ? "bg-primary-main rounded-br-sm"
-                    : "bg-gray-white border border-gray-light rounded-bl-sm"
-                    }`}
+                  className={`px-4 py-2.5 rounded-2xl ${
+                    isMe
+                      ? "bg-primary-main rounded-br-sm"
+                      : "bg-white border border-gray-light rounded-bl-sm"
+                  }`}
                 >
                   <Text
-                    className={`text-body1 ${isMe ? "text-gray-white" : "text-text-primary"
-                      }`}
+                    className={`text-body2 ${
+                      isMe ? "text-white" : "text-text-primary"
+                    }`}
                   >
-                    {item.content || item.text}
+                    {item.content || item.message || item.text}
                   </Text>
                 </View>
 
-                <Text className="text-caption text-text-secondary mt-1">
-                  {item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (item.time || "Now")}
-                </Text>
+                {timeStr ? (
+                  <Text className="text-[11px] text-text-secondary mt-1 px-1">
+                    {timeStr}
+                  </Text>
+                ) : null}
               </View>
             );
           }}

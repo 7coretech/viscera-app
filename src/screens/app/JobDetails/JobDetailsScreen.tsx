@@ -1,4 +1,5 @@
 import ButtonComponent from "@/src/components/ButtonComponent";
+import ApplyJobModal from "@/src/components/ApplyJobModal";
 import { appService } from "@/src/services/appApi/appService";
 import chatService from "@/src/services/chatService";
 import { RootState } from "@/src/store";
@@ -19,7 +20,7 @@ const JobDetailsScreen = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [isApplied, setIsApplied] = useState(false);
   const [applicationId, setApplicationId] = useState<string | null>(null);
-  const [applying, setApplying] = useState(false);
+  const [applyModalVisible, setApplyModalVisible] = useState(false);
 
   useEffect(() => {
     if (jobId) {
@@ -35,10 +36,10 @@ const JobDetailsScreen = () => {
       const appliedRes = await appService.getApplicantJobs('apply');
       if (appliedRes.data && Array.isArray(appliedRes.data.data)) {
         const appliedItems = appliedRes.data.data;
-        const match = appliedItems.find((item: any) => item.id === jobId) as any;
+        const match = appliedItems.find((item: any) => item.id === jobId || item.jobId === jobId) as any;
         if (match) {
           setIsApplied(true);
-          setApplicationId(match.id || match._id || null);
+          setApplicationId(match.applicationId || match.id || null);
         }
       }
     } catch (error) {
@@ -51,24 +52,34 @@ const JobDetailsScreen = () => {
     try {
       const savedRes = await appService.getApplicantJobs('save');
       if (savedRes.data && Array.isArray(savedRes.data.data)) {
-        const isFound = savedRes.data.data.some((item: any) => item.id === jobId);
-        setIsSaved(isFound);
+        const savedItems = savedRes.data.data;
+        const match = savedItems.find((item: any) => item.id === jobId || item.jobId === jobId);
+        if (match) {
+          setIsSaved(true);
+        }
       }
     } catch (error) {
       console.log("Error checking saved status:", error);
     }
   };
 
-  const handleToggleSave = async () => {
+  const handleSaveJob = async () => {
     if (!accessToken) {
-      console.log("Must be logged in to save");
+      Alert.alert("Login Required", "Please login to save this job.");
       return;
     }
     try {
-      await appService.saveJob({ jobId });
-      setIsSaved(!isSaved);
+      if (isSaved) {
+        // Toggle saved locally or call unsave
+        setIsSaved(false);
+      } else {
+        await appService.saveJob({ jobId });
+        setIsSaved(true);
+        Alert.alert("Success", "Job saved successfully.");
+      }
     } catch (error) {
-      console.log("Error toggling save:", error);
+      console.log("Error saving job:", error);
+      Alert.alert("Error", "Could not save the job. Please try again.");
     }
   };
 
@@ -86,24 +97,18 @@ const JobDetailsScreen = () => {
     }
   };
 
-  const handleApplyJob = async () => {
+  const handleApplyClick = () => {
     if (!accessToken) {
       Alert.alert("Login Required", "Please login to apply for this job.");
       return;
     }
-    try {
-      setApplying(true);
-      const res = await appService.applyJob({ jobId, status: "APPLYED" });
-      setIsApplied(true);
-      if (res.data && res.data.data) {
-        setApplicationId(res.data.data.id || res.data.data._id || null);
-      }
-      Alert.alert("Success", "You have successfully applied for this job.");
-    } catch (error) {
-      console.log("Error applying for job:", error);
-      Alert.alert("Error", "Could not apply for the job. Please try again.");
-    } finally {
-      setApplying(false);
+    setApplyModalVisible(true);
+  };
+
+  const handleApplySuccess = (applicationData?: any) => {
+    setIsApplied(true);
+    if (applicationData?.applicationId || applicationData?.id) {
+      setApplicationId(applicationData.applicationId || applicationData.id);
     }
   };
 
@@ -280,13 +285,19 @@ const JobDetailsScreen = () => {
           <View className="flex-[1.5]">
             <ButtonComponent
               title={isApplied ? "Applied" : "Apply Now"}
-              onPress={handleApplyJob}
-              disabled={isApplied || applying}
-              loading={applying}
+              onPress={handleApplyClick}
+              disabled={isApplied}
             />
           </View>
         </View>
       </View>
+
+      <ApplyJobModal
+        visible={applyModalVisible}
+        onClose={() => setApplyModalVisible(false)}
+        job={job}
+        onSuccess={handleApplySuccess}
+      />
     </SafeAreaView>
   );
 };

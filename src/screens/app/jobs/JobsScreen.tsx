@@ -1,3 +1,4 @@
+import ApplyJobModal from "@/src/components/ApplyJobModal";
 import { appService } from "@/src/services/appApi/appService";
 import { RootState } from "@/src/store";
 import { Ionicons } from "@expo/vector-icons";
@@ -6,6 +7,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Text,
   TextInput,
@@ -26,6 +28,8 @@ const JobsScreen = () => {
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedJobForApply, setSelectedJobForApply] = useState<any>(null);
+  const [applyModalVisible, setApplyModalVisible] = useState(false);
   const route = useRouter();
 
   useEffect(() => {
@@ -71,47 +75,40 @@ const JobsScreen = () => {
   const fetchUserInteractions = async () => {
     if (!accessToken) return;
     try {
-      // Fetch applied
-      const appliedRes = await appService.getApplicantJobs('apply');
+      const [appliedRes, savedRes] = await Promise.all([
+        appService.getApplicantJobs('apply'),
+        appService.getApplicantJobs('save')
+      ]);
+
       if (appliedRes.data && Array.isArray(appliedRes.data.data)) {
-        const appliedIds = appliedRes.data.data.map((item: any) => item.id);
-        setAppliedJobs(appliedIds);
+        setAppliedJobs(appliedRes.data.data.map((item: any) => item.id || item.jobId));
       }
 
-      // Fetch saved
-      const savedRes = await appService.getApplicantJobs('save');
       if (savedRes.data && Array.isArray(savedRes.data.data)) {
-        const savedIds = savedRes.data.data.map((item: any) => item.id);
-        setSavedJobs(savedIds);
+        setSavedJobs(savedRes.data.data.map((item: any) => item.id || item.jobId));
       }
     } catch (error) {
-      console.log('Error fetching interactions:', error);
+      console.log("Error fetching user interactions:", error);
     }
   };
 
   const fetchJobs = async () => {
-    setLoading(true);
-    setJobs([]);
     try {
+      setLoading(true);
       if (activeTab === "Recommended") {
         const res = await appService.getJobs();
-        console.log("Get Jobs Response Data:", JSON.stringify(res.data, null, 2));
         if (res.data && Array.isArray(res.data.data)) {
-          if (res.data.data.length > 0) {
-            console.log("First Job Item:", JSON.stringify(res.data.data[0], null, 2));
-          }
-          // The sample showed data: [ ... ], so res.data.data is likely the array
           setJobs(res.data.data);
         }
       } else {
         if (!accessToken) {
+          setJobs([]);
           setLoading(false);
           return;
         }
         const type = activeTab === "Applied" ? "apply" : "save";
         const res = await appService.getApplicantJobs(type);
         if (res.data && Array.isArray(res.data.data)) {
-          const entries = res.data.data;
           setJobs(res.data.data);
         }
       }
@@ -122,21 +119,22 @@ const JobsScreen = () => {
     }
   };
 
-  const handleApply = async (jobId: string) => {
+  const handleApplyClick = (job: any) => {
     if (!accessToken) {
-      console.log("User must be logged in to apply");
+      Alert.alert("Login Required", "Please login to apply for this job.");
       return;
     }
-    try {
-      await appService.applyJob({ jobId, status: "APPLYED" });
+    setSelectedJobForApply(job);
+    setApplyModalVisible(true);
+  };
+
+  const handleApplySuccess = () => {
+    const jobId = selectedJobForApply?.id || selectedJobForApply?._id || selectedJobForApply?.jobId;
+    if (jobId) {
       setAppliedJobs((prev) => [...prev, jobId]);
-      // If we are in Recommended tab, we might want to refetch to update status potentially, 
-      // but locally updating appliedJobs should be enough for the UI check.
-      if (activeTab === "Recommended" || activeTab === "Saved") {
-        // Optimistically updated via setAppliedJobs
-      }
-    } catch (error) {
-      console.log("Error applying for job:", error);
+    }
+    if (activeTab === "Applied") {
+      fetchJobs();
     }
   };
 
@@ -302,7 +300,7 @@ const JobsScreen = () => {
                   {/* Apply Button */}
                   <TouchableOpacity
                     disabled={isApplied}
-                    onPress={() => handleApply(jobId)}
+                    onPress={() => handleApplyClick(item)}
                   >
                     <LinearGradient
                       colors={
@@ -331,6 +329,13 @@ const JobsScreen = () => {
           }}
         />
       )}
+
+      <ApplyJobModal
+        visible={applyModalVisible}
+        onClose={() => setApplyModalVisible(false)}
+        job={selectedJobForApply}
+        onSuccess={handleApplySuccess}
+      />
     </SafeAreaView>
   );
 };

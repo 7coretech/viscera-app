@@ -10,7 +10,7 @@ import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 
-const welcome = () => {
+const Welcome = () => {
   const { isTablet } = useResponsive();
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -87,4 +87,4 @@ const welcome = () => {
   );
 };
 
-export default welcome;
+export default Welcome;

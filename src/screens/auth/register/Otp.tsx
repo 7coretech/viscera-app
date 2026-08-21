@@ -143,7 +143,7 @@ const Otp: React.FC<Props> = ({ mobile, email, onNext }) => {
         loading={loading}
       />
       <View className="m-4 items-center  ">
-        <Text className="text-body1 font-semibold text-text-secondary">Didn't receive the code</Text>
+        <Text className="text-body1 font-semibold text-text-secondary">Didn&apos;t receive the code</Text>
         <TouchableOpacity
           disabled={!canResend || loading}
           onPress={handleResendOtp}

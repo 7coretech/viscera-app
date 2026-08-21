@@ -151,5 +151,6 @@ onRightIconPress,
         );
     }
 );
+InputComponent.displayName = 'InputComponent';
 
 export default InputComponent;

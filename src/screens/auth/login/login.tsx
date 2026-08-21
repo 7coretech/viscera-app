@@ -149,7 +149,7 @@ const LoginScreen = () => {
 
               <View className="flex-row justify-center items-center mt-4 gap-0.3">
                 <Text className="text-body2 font-semibold">
-                  Don't have an account?{" "}
+                  Don&apos;t have an account?{" "}
                 </Text>
                 <TouchableOpacity onPress={() => router.push("/auth/register/register")}>
                   <Text className="text-body2 font-bold text-primary-main">
