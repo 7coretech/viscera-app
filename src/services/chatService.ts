@@ -29,16 +29,26 @@ export const chatService = {
      * @param conversationId The ID of the conversation
      */
     getMessages: async (conversationId: string) => {
-        const response = await chatApiClient.get(`/api/v1/chat/messages/${conversationId}`);
-        return response.data;
+        try {
+            const response = await chatApiClient.get(`/api/v1/chat/conversations/${conversationId}/messages`);
+            return response.data;
+        } catch {
+            const fallback = await chatApiClient.get(`/api/v1/chat/messages/${conversationId}`);
+            return fallback.data;
+        }
     },
 
     /**
      * List all conversations for the current user
      */
     getConversations: async () => {
-        const response = await chatApiClient.get('/api/v1/chat/messages/conversations');
-        return response.data;
+        try {
+            const response = await chatApiClient.get('/api/v1/chat/conversations');
+            return response.data;
+        } catch {
+            const fallback = await chatApiClient.get('/api/v1/chat/messages/conversations');
+            return fallback.data;
+        }
     }
 };
 
