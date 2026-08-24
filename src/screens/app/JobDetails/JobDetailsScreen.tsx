@@ -173,7 +173,7 @@ const JobDetailsScreen = () => {
           </Text>
         </View>
 
-        <TouchableOpacity onPress={handleToggleSave}>
+        <TouchableOpacity onPress={handleSaveJob}>
           <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={22} color="#0141C5" />
         </TouchableOpacity>
       </View>
