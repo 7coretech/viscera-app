@@ -26,7 +26,13 @@ const applyInterceptors = (client: any) => {
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
-            console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`, config.data || '');
+            if (config.data instanceof FormData) {
+                if (config.headers) {
+                    delete config.headers['Content-Type'];
+                    delete config.headers['content-type'];
+                }
+            }
+            console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
             return config;
         },
         (error: any) => {

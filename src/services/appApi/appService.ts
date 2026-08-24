@@ -33,22 +33,16 @@ export const appService = {
     // Resume Methods
     getResumes: () => apiClient.get(APP_ENDPOINTS.RESUMES),
     uploadResume: (formData: FormData) => apiClient.post(APP_ENDPOINTS.RESUMES, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
+        transformRequest: (data) => data,
     }),
     getResumeUrl: (id: string) => apiClient.get(`${APP_ENDPOINTS.RESUMES}/${id}/url`),
     deleteResume: (id: string) => apiClient.delete(`${APP_ENDPOINTS.RESUMES}/${id}`),
     getLicenses: () => apiClient.get(APP_ENDPOINTS.LICENSES),
     saveLicenses: (formData: FormData) => apiClient.post(APP_ENDPOINTS.LICENSES, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
+        transformRequest: (data) => data,
     }),
     updateLicenses: (id: string, formData: FormData) => apiClient.patch(`${APP_ENDPOINTS.LICENSES}/${id}`, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
+        transformRequest: (data) => data,
     }),
     deleteLicense: (id: string) => apiClient.delete(`${APP_ENDPOINTS.LICENSES}/${id}`),
     getLicenseById: (id: string) => apiClient.get(`${APP_ENDPOINTS.LICENSES}/${id}`),
@@ -56,15 +50,11 @@ export const appService = {
     // Document Methods
     getDocuments: () => apiClient.get(APP_ENDPOINTS.DOCUMENTS),
     uploadDocument: (formData: FormData) => apiClient.post(APP_ENDPOINTS.DOCUMENTS, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
+        transformRequest: (data) => data,
     }),
     getDocumentUrl: (id: string) => apiClient.get(`${APP_ENDPOINTS.DOCUMENTS}/${id}/url`),
     updateDocument: (id: string, formData: FormData) => apiClient.patch(`${APP_ENDPOINTS.DOCUMENTS}/${id}`, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
+        transformRequest: (data) => data,
     }),
     deleteDocument: (id: string) => apiClient.delete(`${APP_ENDPOINTS.DOCUMENTS}/${id}`),
 
@@ -75,14 +65,10 @@ export const appService = {
 
     // Profile Picture Method
     updateProfilePicture: (formData: FormData) => apiClient.put(APP_ENDPOINTS.PROFILE_PICTURE, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
+        transformRequest: (data) => data,
     }),
     updateUserProfile: (formData: FormData) => apiClient.patch(APP_ENDPOINTS.GET_USER_PROFILE, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
+        transformRequest: (data) => data,
     }),
 
     // Jobs Methods

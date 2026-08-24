@@ -57,11 +57,13 @@ const Documents = () => {
         }
       } catch (error: any) {
         console.log("Error uploading document:", error);
-        toast.error(
-          error.response?.data?.message ||
-          error.message ||
-          "Failed to upload document."
-        );
+        const errMsg =
+          typeof error === "string"
+            ? error
+            : error.response?.data?.message ||
+              error.message ||
+              "Failed to upload document.";
+        toast.error(errMsg);
       } finally {
         setLoading(false);
       }
@@ -107,11 +109,13 @@ const Documents = () => {
         }
       } catch (error: any) {
         console.log("Error updating document:", error);
-        toast.error(
-          error.response?.data?.message ||
-          error.message ||
-          "Failed to update document."
-        );
+        const errMsg =
+          typeof error === "string"
+            ? error
+            : error.response?.data?.message ||
+              error.message ||
+              "Failed to update document.";
+        toast.error(errMsg);
       } finally {
         setLoading(false);
         setEditingDocId(null);
@@ -128,11 +132,13 @@ const Documents = () => {
       }
     } catch (error: any) {
       console.log("Error deleting document:", error);
-      toast.error(
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to delete document."
-      );
+      const errMsg =
+        typeof error === "string"
+          ? error
+          : error.response?.data?.message ||
+            error.message ||
+            "Failed to delete document.";
+      toast.error(errMsg);
     }
   };
 

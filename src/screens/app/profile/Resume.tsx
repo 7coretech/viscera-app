@@ -59,11 +59,13 @@ const Resume = () => {
         }
       } catch (error: any) {
         console.log("Error uploading resume:", error);
-        toast.error(
-          error.response?.data?.message ||
-          error.message ||
-          "Failed to upload resume."
-        );
+        const errMsg =
+          typeof error === "string"
+            ? error
+            : error.response?.data?.message ||
+              error.message ||
+              "Failed to upload resume.";
+        toast.error(errMsg);
       } finally {
         setLoading(false);
       }

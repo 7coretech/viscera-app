@@ -128,7 +128,13 @@ const ApplyJobModal: React.FC<ApplyJobModalProps> = ({
         }
       } catch (error: any) {
         console.log("Error uploading resume in modal:", error);
-        toast.error("Failed to upload resume.");
+        const errMsg =
+          typeof error === "string"
+            ? error
+            : error.response?.data?.message ||
+              error.message ||
+              "Failed to upload resume.";
+        toast.error(errMsg);
       } finally {
         setUploadingResume(false);
       }

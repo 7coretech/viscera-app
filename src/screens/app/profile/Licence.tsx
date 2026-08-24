@@ -81,11 +81,13 @@ const Licence = () => {
       }
     } catch (error: any) {
       console.log("Error saving license:", error);
-      toast.error(
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to save license."
-      );
+      const errMsg =
+        typeof error === "string"
+          ? error
+          : error.response?.data?.message ||
+            error.message ||
+            "Failed to save license.";
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -105,11 +107,13 @@ const Licence = () => {
       }
     } catch (error: any) {
       console.log("Error deleting license:", error);
-      toast.error(
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to delete license."
-      );
+      const errMsg =
+        typeof error === "string"
+          ? error
+          : error.response?.data?.message ||
+            error.message ||
+            "Failed to delete license.";
+      toast.error(errMsg);
     }
   };
 
