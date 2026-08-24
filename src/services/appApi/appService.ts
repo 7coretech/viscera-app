@@ -1,5 +1,26 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiClient from '../api';
 import { APP_ENDPOINTS } from './appApi';
+
+const API_BASE_URL = 'https://api.visceraconnect.com';
+
+const uploadFormData = async (endpoint: string, formData: FormData, method = 'POST') => {
+    const token = await AsyncStorage.getItem('accessToken');
+    const url = `${API_BASE_URL}${endpoint}`;
+    const response = await fetch(url, {
+        method,
+        headers: {
+            'Accept': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+    });
+    const data = await response.json();
+    if (!response.ok) {
+        throw data?.message || data?.error || 'Upload failed';
+    }
+    return { data, status: response.status };
+};
 
 // App Service Methods
 export const appService = {
@@ -32,30 +53,20 @@ export const appService = {
 
     // Resume Methods
     getResumes: () => apiClient.get(APP_ENDPOINTS.RESUMES),
-    uploadResume: (formData: FormData) => apiClient.post(APP_ENDPOINTS.RESUMES, formData, {
-        transformRequest: (data) => data,
-    }),
+    uploadResume: (formData: FormData) => uploadFormData(APP_ENDPOINTS.RESUMES, formData, 'POST'),
     getResumeUrl: (id: string) => apiClient.get(`${APP_ENDPOINTS.RESUMES}/${id}/url`),
     deleteResume: (id: string) => apiClient.delete(`${APP_ENDPOINTS.RESUMES}/${id}`),
     getLicenses: () => apiClient.get(APP_ENDPOINTS.LICENSES),
-    saveLicenses: (formData: FormData) => apiClient.post(APP_ENDPOINTS.LICENSES, formData, {
-        transformRequest: (data) => data,
-    }),
-    updateLicenses: (id: string, formData: FormData) => apiClient.patch(`${APP_ENDPOINTS.LICENSES}/${id}`, formData, {
-        transformRequest: (data) => data,
-    }),
+    saveLicenses: (formData: FormData) => uploadFormData(APP_ENDPOINTS.LICENSES, formData, 'POST'),
+    updateLicenses: (id: string, formData: FormData) => uploadFormData(`${APP_ENDPOINTS.LICENSES}/${id}`, formData, 'PATCH'),
     deleteLicense: (id: string) => apiClient.delete(`${APP_ENDPOINTS.LICENSES}/${id}`),
     getLicenseById: (id: string) => apiClient.get(`${APP_ENDPOINTS.LICENSES}/${id}`),
 
     // Document Methods
     getDocuments: () => apiClient.get(APP_ENDPOINTS.DOCUMENTS),
-    uploadDocument: (formData: FormData) => apiClient.post(APP_ENDPOINTS.DOCUMENTS, formData, {
-        transformRequest: (data) => data,
-    }),
+    uploadDocument: (formData: FormData) => uploadFormData(APP_ENDPOINTS.DOCUMENTS, formData, 'POST'),
     getDocumentUrl: (id: string) => apiClient.get(`${APP_ENDPOINTS.DOCUMENTS}/${id}/url`),
-    updateDocument: (id: string, formData: FormData) => apiClient.patch(`${APP_ENDPOINTS.DOCUMENTS}/${id}`, formData, {
-        transformRequest: (data) => data,
-    }),
+    updateDocument: (id: string, formData: FormData) => uploadFormData(`${APP_ENDPOINTS.DOCUMENTS}/${id}`, formData, 'PATCH'),
     deleteDocument: (id: string) => apiClient.delete(`${APP_ENDPOINTS.DOCUMENTS}/${id}`),
 
     // Travel Preferences Methods
@@ -64,12 +75,8 @@ export const appService = {
     updateTravelPreferences: (data: any) => apiClient.patch(APP_ENDPOINTS.TRAVEL, data),
 
     // Profile Picture Method
-    updateProfilePicture: (formData: FormData) => apiClient.put(APP_ENDPOINTS.PROFILE_PICTURE, formData, {
-        transformRequest: (data) => data,
-    }),
-    updateUserProfile: (formData: FormData) => apiClient.patch(APP_ENDPOINTS.GET_USER_PROFILE, formData, {
-        transformRequest: (data) => data,
-    }),
+    updateProfilePicture: (formData: FormData) => uploadFormData(APP_ENDPOINTS.PROFILE_PICTURE, formData, 'PUT'),
+    updateUserProfile: (formData: FormData) => uploadFormData(APP_ENDPOINTS.GET_USER_PROFILE, formData, 'PATCH'),
 
     // Jobs Methods
     getJobs: () => apiClient.get(APP_ENDPOINTS.JOBS),
