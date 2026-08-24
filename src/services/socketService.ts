@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = 'http://localhost:5000'; // Update this to your dynamic server URL if needed
+const SOCKET_URL = 'https://api.visceraconnect.com';
 
 class SocketService {
     private socket: Socket | null = null;
@@ -10,19 +10,24 @@ class SocketService {
         if (this.socket) return;
 
         this.socket = io(SOCKET_URL, {
-            transports: ['websocket'],
+            transports: ['websocket', 'polling'],
             autoConnect: true,
+            reconnection: true,
+            reconnectionAttempts: 10,
+            reconnectionDelay: 2000,
         });
 
         this.socket.on('connect', async () => {
             console.log('✅ Connected to socket server');
+            const token = await AsyncStorage.getItem('accessToken');
             const userStr = await AsyncStorage.getItem('user');
-            if (userStr) {
+            if (token && userStr) {
                 const user = JSON.parse(userStr);
-                // Register with userId and role as required
                 this.socket?.emit('register', {
-                    userId: user.id || user._id,
-                    role: user.role || 'nurse'
+                    token,
+                    accessToken: token,
+                    userId: user.userId || user.id || user._id,
+                    role: user.role || 'NURSE'
                 });
             }
         });
@@ -48,6 +53,16 @@ class SocketService {
 
     offNewMessage() {
         this.socket?.off('new_message');
+    }
+
+    onNotification(callback: (notification: any) => void) {
+        this.socket?.on('notification', callback);
+        this.socket?.on('new_notification', callback);
+    }
+
+    offNotification() {
+        this.socket?.off('notification');
+        this.socket?.off('new_notification');
     }
 
     disconnect() {

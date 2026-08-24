@@ -65,6 +65,7 @@ const DashboardScreen = () => {
   const [totalCompletion, setTotalCompletion] = useState(0);
   const [savedCount, setSavedCount] = useState(0);
   const [appliedCount, setAppliedCount] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
@@ -72,10 +73,34 @@ const DashboardScreen = () => {
         fetchUserProfile();
         fetchCompletionScore();
         fetchJobCounts();
+        fetchNotificationCounts();
       }
       updateGreeting();
     }, [accessToken])
   );
+
+  const fetchNotificationCounts = async () => {
+    try {
+      const res = await appService.getUnreadNotificationCount();
+      const base = res?.data || res;
+      const d = base?.data || base || {};
+      const count = Number(d?.unreadCount ?? d?.count ?? 0);
+      setUnreadNotifications(count);
+    } catch {
+      try {
+        const notifRes = await appService.getNotifications();
+        const raw = notifRes?.data?.data || notifRes?.data || [];
+        const arr = Array.isArray(raw?.notifications)
+          ? raw.notifications
+          : Array.isArray(raw)
+          ? raw
+          : [];
+        setUnreadNotifications(
+          arr.filter((n: any) => !n.isRead && !n.read && n.status !== "READ").length
+        );
+      } catch {}
+    }
+  };
 
   const fetchUserProfile = async () => {
     try {
@@ -159,11 +184,13 @@ const DashboardScreen = () => {
                   router.push('/app/Notifications')
                 }}>
                   <Ionicons name="notifications" size={20} color="white" />
-                  <View className="absolute top-0 right-0 bg-[#E74C3C] w-5 h-5 rounded-full items-center justify-center border-2 border-white">
-                    <Text className="text-[10px] text-gray-white font-bold">
-                      3
-                    </Text>
-                  </View>
+                  {unreadNotifications > 0 && (
+                    <View className="absolute top-0 right-0 bg-[#E74C3C] min-w-[20px] h-5 px-1 rounded-full items-center justify-center border-2 border-white">
+                      <Text className="text-[10px] text-gray-white font-bold">
+                        {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                      </Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               </View>
 

@@ -56,7 +56,17 @@ const ChatRoomScreen = () => {
         chatService
           .getMessages(conversationId as string)
           .then((res) => {
-            const list = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
+            const base = res?.data || res;
+            const d = base?.data || base || {};
+            const list = Array.isArray(d?.messages)
+              ? d.messages
+              : Array.isArray(base?.messages)
+              ? base.messages
+              : Array.isArray(d)
+              ? d
+              : Array.isArray(base)
+              ? base
+              : [];
             if (Array.isArray(list) && list.length > 0) {
               setMessages(list);
             }
@@ -81,11 +91,18 @@ const ChatRoomScreen = () => {
 
       if (conversationId) {
         const response = await chatService.getMessages(conversationId as string);
-        const list =
-          response?.data?.data ||
-          response?.data ||
-          (Array.isArray(response) ? response : []);
-        setMessages(Array.isArray(list) ? list : []);
+        const base = response?.data || response;
+        const d = base?.data || base || {};
+        const list = Array.isArray(d?.messages)
+          ? d.messages
+          : Array.isArray(base?.messages)
+          ? base.messages
+          : Array.isArray(d)
+          ? d
+          : Array.isArray(base)
+          ? base
+          : [];
+        setMessages(list);
       }
     } catch (error) {
       console.log("Error loading chat data:", error);
@@ -115,8 +132,18 @@ const ChatRoomScreen = () => {
     try {
       await chatService.sendMessage(conversationId as string, text);
       const res = await chatService.getMessages(conversationId as string);
-      const list = res?.data?.data || res?.data || [];
-      if (Array.isArray(list)) {
+      const base = res?.data || res;
+      const d = base?.data || base || {};
+      const list = Array.isArray(d?.messages)
+        ? d.messages
+        : Array.isArray(base?.messages)
+        ? base.messages
+        : Array.isArray(d)
+        ? d
+        : Array.isArray(base)
+        ? base
+        : [];
+      if (Array.isArray(list) && list.length > 0) {
         setMessages(list);
       }
     } catch (error) {

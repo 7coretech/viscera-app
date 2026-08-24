@@ -1,8 +1,8 @@
 import chatService from "@/src/services/chatService";
 import { useTheme } from "@/src/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useEffect, useState, useCallback } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useState, useCallback } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -48,12 +48,18 @@ const ChatListScreen = () => {
     try {
       if (isRefresh) setRefreshing(true);
       const response = await chatService.getConversations();
-      const rawList =
-        response?.data?.data ||
-        response?.data ||
-        (Array.isArray(response) ? response : []);
-      const list = Array.isArray(rawList) ? rawList : [];
-      setConversations(list);
+      const base = response?.data || response;
+      const d = base?.data || base || {};
+      const rawList = Array.isArray(d?.conversations)
+        ? d.conversations
+        : Array.isArray(base?.conversations)
+        ? base.conversations
+        : Array.isArray(d)
+        ? d
+        : Array.isArray(base)
+        ? base
+        : [];
+      setConversations(rawList);
     } catch (error) {
       console.log("Error fetching conversations:", error);
     } finally {
@@ -62,14 +68,15 @@ const ChatListScreen = () => {
     }
   }, []);
 
-  useEffect(() => {
-    fetchConversations();
-    // Auto-refresh conversations every 10 seconds while viewing list
-    const interval = setInterval(() => {
+  useFocusEffect(
+    useCallback(() => {
       fetchConversations();
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [fetchConversations]);
+      const interval = setInterval(() => {
+        fetchConversations();
+      }, 5000);
+      return () => clearInterval(interval);
+    }, [fetchConversations])
+  );
 
   if (loading && !refreshing) {
     return (

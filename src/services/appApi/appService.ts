@@ -93,6 +93,12 @@ export const appService = {
     getApplicantJobs: (type: 'save' | 'apply') => apiClient.get(type === 'save' ? '/api/v1/jobs/me?type=SAVED' : '/api/v1/jobs/me?type=APPLIED'),
     saveJob: (data: { jobId: string }) => apiClient.post(`/api/v1/jobs/${data.jobId}/save`, data),
     applyJob: (data: { jobId: string, status: string }) => apiClient.post(`/api/v1/applications/job/${data.jobId}/apply`, data),
+
+    // Notification Methods
+    getNotifications: () => apiClient.get('/api/v1/notifications'),
+    getUnreadNotificationCount: () => apiClient.get('/api/v1/notifications/unread-counts'),
+    markNotificationAsRead: (id: string) => apiClient.put(`/api/v1/notifications/${id}/read`),
+    deleteNotification: (id: string) => apiClient.delete(`/api/v1/notifications/${id}`),
 };
 
 export default {
