@@ -130,7 +130,7 @@ const JobDetailsScreen = () => {
           params: {
             conversationId: response.data.conversationId,
             name: job.companyName || "Recruiter",
-            avatar: job.companyLogo || "https://i.pravatar.cc/150",
+            avatar: job.companyLogo || "",
           }
         });
       }

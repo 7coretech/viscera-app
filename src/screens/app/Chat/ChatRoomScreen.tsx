@@ -171,12 +171,20 @@ const ChatRoomScreen = () => {
             <Ionicons name="arrow-back" size={22} color="#1F2937" />
           </TouchableOpacity>
 
-          <Image
-            source={{
-              uri: (avatar as string) || "https://i.pravatar.cc/150",
-            }}
-            className="w-10 h-10 rounded-full mr-3 border border-gray-light"
-          />
+          {avatar ? (
+            <Image
+              source={{
+                uri: avatar as string,
+              }}
+              className="w-10 h-10 rounded-full mr-3 border border-gray-light"
+            />
+          ) : (
+            <View className="w-10 h-10 rounded-full bg-primary-main items-center justify-center mr-3 border border-primary-main/20">
+              <Text className="text-white text-body1 font-bold">
+                {((name as string) || "R").charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
 
           <View className="flex-1">
             <Text className="text-body1 font-bold text-text-primary" numberOfLines={1}>

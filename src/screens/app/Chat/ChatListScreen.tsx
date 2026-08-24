@@ -144,7 +144,8 @@ const ChatListScreen = () => {
           const avatarUrl =
             item.participant?.avatar ||
             item.recipientAvatar ||
-            "https://i.pravatar.cc/150";
+            "";
+          const initialLetter = (recipientName || "R").charAt(0).toUpperCase();
           const jobTitle = item.application?.jobTitle || item.jobTitle || "";
 
           let lastMsg = "Tap to chat with recruiter";
@@ -187,10 +188,18 @@ const ChatListScreen = () => {
               }`}
             >
               <View className="relative mr-3">
-                <Image
-                  source={{ uri: avatarUrl }}
-                  className="w-12 h-12 rounded-full border border-gray-light"
-                />
+                {avatarUrl ? (
+                  <Image
+                    source={{ uri: avatarUrl }}
+                    className="w-12 h-12 rounded-full border border-gray-light"
+                  />
+                ) : (
+                  <View className="w-12 h-12 rounded-full bg-primary-main items-center justify-center border border-primary-main/20">
+                    <Text className="text-white text-h4 font-bold">
+                      {initialLetter}
+                    </Text>
+                  </View>
+                )}
                 {item.isOnline && (
                   <View className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-action-green rounded-full border-2 border-white" />
                 )}
