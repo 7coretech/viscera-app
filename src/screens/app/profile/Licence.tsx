@@ -120,8 +120,16 @@ const Licence = () => {
   const handleViewLicense = async (licenseId: string) => {
     try {
       const response = await appService.getLicenseById(licenseId);
-      if (response.data.fileUrl) {
-        await Linking.openURL(response.data.fileUrl);
+      const url =
+        response.data?.data?.fileUrl ||
+        response.data?.fileUrl ||
+        response.data?.data?.url ||
+        response.data?.url;
+
+      if (url) {
+        await Linking.openURL(url);
+      } else {
+        toast.error("License document file URL not found.");
       }
     } catch (error: any) {
       console.log("Error viewing license:", error);
@@ -204,16 +212,18 @@ const Licence = () => {
                     {license.licenseType}
                   </Text>
 
-                  <View className="flex-row items-center bg-actionLight-green px-3 py-1 rounded-full">
-                    <Ionicons
-                      name={license.isVerified ? "checkmark-circle" : "time-outline"}
-                      size={14}
-                      color={license.isVerified ? theme.palette.action.green : theme.palette.text.secondary}
-                    />
-                    <Text className={`ml-1 text-caption font-medium ${license.isVerified ? 'text-action-green' : 'text-text-secondary'}`}>
-                      {license.isVerified ? 'Verified' : 'Pending'}
-                    </Text>
-                  </View>
+                  {license.isVerified && (
+                    <View className="flex-row items-center bg-actionLight-green px-3 py-1 rounded-full">
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={14}
+                        color={theme.palette.action.green}
+                      />
+                      <Text className="ml-1 text-caption font-medium text-action-green">
+                        Verified
+                      </Text>
+                    </View>
+                  )}
                 </View>
 
                 {license.states && license.states.length > 0 && (
