@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Linking, Text, TouchableOpacity, View } from "react-native";
 import { z } from "zod";
 
 const basicInfoSchema = z.object({
@@ -185,6 +185,27 @@ const BasicInfo: React.FC<Props> = ({ onNext, defaultValues }) => {
         onPress={handleSubmit(onSubmit)}
         loading={loading}
       />
+
+      <View className="mt-4 px-2">
+        <Text className="text-caption text-text-secondary text-center leading-4">
+          By creating an account, you agree to our{" "}
+          <Text
+            className="text-primary-main font-semibold"
+            onPress={() => Linking.openURL("https://app.visceraconnect.com/terms")}
+          >
+            Terms of Service
+          </Text>{" "}
+          and{" "}
+          <Text
+            className="text-primary-main font-semibold"
+            onPress={() => Linking.openURL("https://app.visceraconnect.com/privacy")}
+          >
+            Privacy Policy
+          </Text>
+          .
+        </Text>
+      </View>
+
       <View className="flex-row justify-center items-center mt-4 gap-0.3">
         <Text className="text-body2 font-semibold">
           Already have an account?{" "}
