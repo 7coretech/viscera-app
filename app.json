@@ -60,8 +60,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "f2529079-93a8-4e9e-a5dc-aa1b2f921505"
+        "projectId": "a853f1f0-d723-4003-8f69-02d0f79ea4f1"
       }
-    }
+    },
+    "owner": "kananshahh"
   }
 }
