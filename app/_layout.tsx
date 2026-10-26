@@ -26,9 +26,11 @@ import { Provider, useDispatch } from "react-redux";
 import "../global.css";
 import { AppDispatch, store } from "../src/store";
 import { initializeAuth } from "../src/store/authSlice";
+import socketService from "../src/services/socketService";
 import {
   registerDevicePushToken,
   setupNotificationListeners,
+  showLocalNotification,
 } from "../src/services/pushNotificationService";
 
 // Force light mode
@@ -44,6 +46,23 @@ function RootLayoutContent() {
       if (result?.payload?.accessToken) {
         // User already logged in, sync push token
         registerDevicePushToken().catch(console.error);
+
+        // Listen for socket events to show real-time foreground notifications
+        socketService.initialize();
+        socketService.onNewMessage((msg: any) => {
+          showLocalNotification({
+            title: "New Message",
+            body: msg?.content || "You have a new message",
+            data: { url: "/app/(tabs)/chat", conversationId: msg?.applicationId },
+          });
+        });
+        socketService.onNotification((notif: any) => {
+          showLocalNotification({
+            title: notif?.title || "Viscera Alert",
+            body: notif?.description || notif?.body || "",
+            data: { url: notif?.url },
+          });
+        });
       }
       setIsInitializing(false);
     };
@@ -53,6 +72,8 @@ function RootLayoutContent() {
     const unsubscribe = setupNotificationListeners();
     return () => {
       unsubscribe();
+      socketService.offNewMessage();
+      socketService.offNotification();
     };
   }, [dispatch]);
 

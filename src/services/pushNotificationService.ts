@@ -18,7 +18,36 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const PUSH_TOKEN_STORAGE_KEY = 'viscera_push_token';
+export const PUSH_TOKEN_STORAGE_KEY = 'viscera_push_token';
+export const PUSH_STATUS_STORAGE_KEY = 'viscera_push_status';
+
+/**
+ * Trigger an immediate native local notification banner
+ */
+export async function showLocalNotification({
+  title,
+  body,
+  data = {},
+}: {
+  title: string;
+  body: string;
+  data?: any;
+}): Promise<void> {
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title,
+        body,
+        data,
+        sound: 'default',
+        priority: Notifications.AndroidNotificationPriority.HIGH,
+      },
+      trigger: null,
+    });
+  } catch (err) {
+    console.error('[Push] Failed to show local notification:', err);
+  }
+}
 
 /**
  * Request notification permissions and fetch the Expo Push Token
@@ -37,8 +66,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
   }
 
   if (!Device.isDevice) {
-    console.log('[Push] Must use a physical device for Push Notifications');
-    return null;
+    console.warn('[Push] Running on emulator/simulator: remote push notifications require Google Play Services.');
   }
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -50,7 +78,8 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
   }
 
   if (finalStatus !== 'granted') {
-    console.log('[Push] Notification permission not granted');
+    console.log('[Push] Notification permission not granted. Status:', finalStatus);
+    await AsyncStorage.setItem(PUSH_STATUS_STORAGE_KEY, `PERMISSION_DENIED (${finalStatus})`);
     return null;
   }
 
@@ -65,8 +94,11 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
     });
     token = tokenResponse.data;
     console.log('[Push] Registered Expo Push Token:', token);
-  } catch (error) {
-    console.error('[Push] Error getting push token:', error);
+    await AsyncStorage.setItem(PUSH_STATUS_STORAGE_KEY, `REGISTERED: ${token}`);
+  } catch (error: any) {
+    const errorMsg = error?.message || String(error);
+    console.error('[Push] Error getting push token:', errorMsg);
+    await AsyncStorage.setItem(PUSH_STATUS_STORAGE_KEY, `TOKEN_ERROR: ${errorMsg}`);
   }
 
   return token;
@@ -78,19 +110,25 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
 export async function registerDevicePushToken(): Promise<void> {
   try {
     const accessToken = await AsyncStorage.getItem('accessToken');
-    if (!accessToken) return;
+    if (!accessToken) {
+      console.log('[Push] No accessToken available, skipping push token registration.');
+      return;
+    }
 
     const token = await registerForPushNotificationsAsync();
-    if (!token) return;
+    if (!token) {
+      console.log('[Push] No push token obtained, skipping backend sync.');
+      return;
+    }
 
     await apiClient.post('/api/v1/users/push-token', {
       pushToken: token,
     });
 
     await AsyncStorage.setItem(PUSH_TOKEN_STORAGE_KEY, token);
-    console.log('[Push] Push token synced with backend successfully');
-  } catch (err) {
-    console.error('[Push] Failed to sync push token with backend:', err);
+    console.log('[Push] Push token synced with backend successfully:', token);
+  } catch (err: any) {
+    console.error('[Push] Failed to sync push token with backend:', err?.message || err);
   }
 }
 
@@ -134,10 +172,19 @@ export function setupNotificationListeners(
     if (data?.url) {
       const url = String(data.url);
       if (url.includes('chat')) {
-        router.push('/app/ChatRoom' as any);
+        router.push('/app/(tabs)/chat' as any);
         return;
       }
     }
+
+    if (data?.jobId) {
+      router.push({
+        pathname: '/app/JobDetail',
+        params: { jobId: data.jobId },
+      } as any);
+      return;
+    }
+
     // Default fallback to Notifications screen
     router.push('/app/Notifications' as any);
   });
