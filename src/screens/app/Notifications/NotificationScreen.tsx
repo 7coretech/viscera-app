@@ -246,7 +246,7 @@ const NotificationScreen = () => {
     } else if (raw.jobId || text.includes("job")) {
       if (raw.jobId) {
         router.push({
-          pathname: "/app/JobDetails",
+          pathname: "/app/JobDetail",
           params: { jobId: raw.jobId },
         });
       } else {

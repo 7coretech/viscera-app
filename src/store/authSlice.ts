@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { authService, otpService } from '../services/authApi/authService';
+import { registerDevicePushToken, unregisterDevicePushToken } from '../services/pushNotificationService';
 
 interface AuthState {
     user: any | null;
@@ -44,6 +45,7 @@ export const registerUser = createAsyncThunk(
             if (success && data) {
                 await AsyncStorage.setItem('accessToken', data.accessToken);
                 await AsyncStorage.setItem('refreshToken', data.refreshToken);
+                registerDevicePushToken().catch(console.error);
                 return data;
             } else {
                 return rejectWithValue(message || 'Registration failed');
@@ -98,6 +100,7 @@ export const logoutUser = createAsyncThunk(
         } catch (error: any) {
             return rejectWithValue(typeof error === 'string' ? error : (error.response?.data?.message || error.message || 'Logout failed'));
         } finally {
+            await unregisterDevicePushToken().catch(console.error);
             await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'user']);
         }
     }
@@ -115,6 +118,7 @@ export const loginUser = createAsyncThunk(
                 if (data.user) {
                     await AsyncStorage.setItem('user', JSON.stringify(data.user));
                 }
+                registerDevicePushToken().catch(console.error);
                 return data;
             } else {
                 return rejectWithValue(response.data.message || 'Login failed');

@@ -26,6 +26,10 @@ import { Provider, useDispatch } from "react-redux";
 import "../global.css";
 import { AppDispatch, store } from "../src/store";
 import { initializeAuth } from "../src/store/authSlice";
+import {
+  registerDevicePushToken,
+  setupNotificationListeners,
+} from "../src/services/pushNotificationService";
 
 // Force light mode
 Appearance.setColorScheme("light");
@@ -36,10 +40,20 @@ function RootLayoutContent() {
 
   useEffect(() => {
     const init = async () => {
-      await dispatch(initializeAuth());
+      const result: any = await dispatch(initializeAuth());
+      if (result?.payload?.accessToken) {
+        // User already logged in, sync push token
+        registerDevicePushToken().catch(console.error);
+      }
       setIsInitializing(false);
     };
     init();
+
+    // Set up foreground & tap notification listeners
+    const unsubscribe = setupNotificationListeners();
+    return () => {
+      unsubscribe();
+    };
   }, [dispatch]);
 
   if (isInitializing) {
