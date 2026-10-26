@@ -4,7 +4,7 @@
     "slug": "Viscera",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/viscera_Logo.png",
+    "icon": "./assets/images/Viscera_Logo.png",
     "scheme": "viscera",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -48,7 +48,6 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/viscera_Logo.png",
           "color": "#2563EB"
         }
       ]
