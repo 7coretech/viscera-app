@@ -84,7 +84,7 @@ const DashboardScreen = () => {
       const res = await appService.getUnreadNotificationCount();
       const base = res?.data || res;
       const d = base?.data || base || {};
-      const count = Number(d?.unreadCount ?? d?.count ?? 0);
+      const count = Number(d?.unread ?? d?.unreadCount ?? d?.count ?? 0);
       setUnreadNotifications(count);
     } catch {
       try {

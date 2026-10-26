@@ -175,7 +175,7 @@ const NotificationScreen = () => {
       const list: NotificationItemType[] = rawList.map((item: any) => {
         const id = item.id || item._id || item.notificationId;
         const title = item.title || item.heading || "Notification";
-        const message = item.message || item.body || item.content || "";
+        const message = item.description || item.message || item.body || item.content || "";
         const time = formatNotificationTime(item.createdAt || item.timestamp || item.date);
         const isRead = Boolean(item.isRead || item.read || item.status === "READ");
         const type = resolveNotificationType(item);
