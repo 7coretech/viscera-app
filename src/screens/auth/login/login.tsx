@@ -40,6 +40,7 @@ const LoginScreen = () => {
   const {
     control,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -136,7 +137,13 @@ const LoginScreen = () => {
               </View>
               <TouchableOpacity
                 className="mb-4 mt-1 self-end"
-                onPress={() => router.push("/auth/forgot-password/forgot-password" as any)}
+                onPress={() => {
+                  const currentEmail = getValues("email")?.trim() || "";
+                  router.push({
+                    pathname: "/auth/forgot-password/forgot-password",
+                    params: currentEmail ? { email: currentEmail } : {},
+                  } as any);
+                }}
               >
                 <Text className="text-primary-main text-body1 font-bold">
                   Forgot password?
