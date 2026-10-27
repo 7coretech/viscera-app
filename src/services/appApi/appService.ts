@@ -85,6 +85,8 @@ export const appService = {
     // Applicant Methods
     getApplicantJobs: (type: 'save' | 'apply') => apiClient.get(type === 'save' ? '/api/v1/jobs/me?type=SAVED' : '/api/v1/jobs/me?type=APPLIED'),
     saveJob: (data: { jobId: string }) => apiClient.post(`/api/v1/jobs/${data.jobId}/save`, data),
+    unsaveJob: (data: { jobId: string }) => apiClient.delete(`/api/v1/jobs/${data.jobId}/save`),
+    toggleSaveJob: (data: { jobId: string }) => apiClient.post(`/api/v1/jobs/${data.jobId}/toggle-save`, data),
     applyJob: (data: { jobId: string, status: string }) => apiClient.post(`/api/v1/applications/job/${data.jobId}/apply`, data),
 
     // Notification Methods

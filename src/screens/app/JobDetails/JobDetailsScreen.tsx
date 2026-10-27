@@ -1,6 +1,7 @@
 import ButtonComponent from "@/src/components/ButtonComponent";
 import ApplyJobModal from "@/src/components/ApplyJobModal";
 import { appService } from "@/src/services/appApi/appService";
+import { formatSalary } from "@/src/utils/salary";
 import chatService from "@/src/services/chatService";
 import { RootState } from "@/src/store";
 import { Ionicons } from "@expo/vector-icons";
@@ -48,15 +49,13 @@ const JobDetailsScreen = () => {
   };
 
   const checkIfSaved = async () => {
-    if (!accessToken) return;
+    if (!accessToken || !jobId) return;
     try {
       const savedRes = await appService.getApplicantJobs('save');
-      if (savedRes.data && Array.isArray(savedRes.data.data)) {
-        const savedItems = savedRes.data.data;
-        const match = savedItems.find((item: any) => item.id === jobId || item.jobId === jobId);
-        if (match) {
-          setIsSaved(true);
-        }
+      const items = savedRes?.data?.data || savedRes?.data;
+      if (Array.isArray(items)) {
+        const match = items.some((item: any) => (item.id || item.jobId) === jobId);
+        setIsSaved(match);
       }
     } catch (error) {
       console.log("Error checking saved status:", error);
@@ -68,18 +67,22 @@ const JobDetailsScreen = () => {
       Alert.alert("Login Required", "Please login to save this job.");
       return;
     }
+    const wasSaved = isSaved;
+    setIsSaved(!wasSaved);
+
     try {
-      if (isSaved) {
-        // Toggle saved locally or call unsave
-        setIsSaved(false);
+      if (wasSaved) {
+        await appService.unsaveJob({ jobId });
+        Alert.alert("Success", "Job removed from your saved list.");
       } else {
         await appService.saveJob({ jobId });
-        setIsSaved(true);
-        Alert.alert("Success", "Job saved successfully.");
+        Alert.alert("Success", "Job saved to your list.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log("Error saving job:", error);
-      Alert.alert("Error", "Could not save the job. Please try again.");
+      setIsSaved(wasSaved);
+      const msg = typeof error === 'string' ? error : (error?.message || "Could not update saved job. Please try again.");
+      Alert.alert("Error", msg);
     }
   };
 
@@ -198,13 +201,13 @@ const JobDetailsScreen = () => {
             </View>
           )}
 
-          {job.salary && (
+          {job.salary && formatSalary(job.salary) ? (
             <View className="bg-actionLight-green px-3 py-1 rounded-xl mr-2 mb-2">
               <Text className="text-caption font-bold text-action-green">
-                ${job.salary.min} - ${job.salary.max}/{job.salary.type === 'HOURLY' ? 'hr' : 'yr'}
+                {formatSalary(job.salary)}
               </Text>
             </View>
-          )}
+          ) : null}
 
           {job.shiftType && (
             <View className="bg-secondary-light1 px-3 py-1 rounded-xl mb-2">

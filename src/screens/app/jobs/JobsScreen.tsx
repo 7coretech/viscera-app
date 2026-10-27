@@ -1,5 +1,6 @@
 import ApplyJobModal from "@/src/components/ApplyJobModal";
 import { appService } from "@/src/services/appApi/appService";
+import { formatSalary } from "@/src/utils/salary";
 import { RootState } from "@/src/store";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -75,17 +76,23 @@ const JobsScreen = () => {
   const fetchUserInteractions = async () => {
     if (!accessToken) return;
     try {
-      const [appliedRes, savedRes] = await Promise.all([
+      const [appliedRes, savedRes] = await Promise.allSettled([
         appService.getApplicantJobs('apply'),
         appService.getApplicantJobs('save')
       ]);
 
-      if (appliedRes.data && Array.isArray(appliedRes.data.data)) {
-        setAppliedJobs(appliedRes.data.data.map((item: any) => item.id || item.jobId));
+      if (appliedRes.status === 'fulfilled' && appliedRes.value?.data) {
+        const arr = appliedRes.value.data?.data || appliedRes.value.data;
+        if (Array.isArray(arr)) {
+          setAppliedJobs(arr.map((item: any) => item.id || item.jobId));
+        }
       }
 
-      if (savedRes.data && Array.isArray(savedRes.data.data)) {
-        setSavedJobs(savedRes.data.data.map((item: any) => item.id || item.jobId));
+      if (savedRes.status === 'fulfilled' && savedRes.value?.data) {
+        const arr = savedRes.value.data?.data || savedRes.value.data;
+        if (Array.isArray(arr)) {
+          setSavedJobs(arr.map((item: any) => item.id || item.jobId));
+        }
       }
     } catch (error) {
       console.log("Error fetching user interactions:", error);
@@ -140,23 +147,33 @@ const JobsScreen = () => {
 
   const toggleSave = async (jobId: string) => {
     if (!accessToken) {
-      console.log("User must be logged in to save jobs");
+      Alert.alert("Login Required", "Please login to save jobs.");
       return;
     }
+    const wasSaved = savedJobs.includes(jobId);
+    // Optimistic UI update
+    setSavedJobs((prev) =>
+      wasSaved ? prev.filter((id) => id !== jobId) : [...prev, jobId]
+    );
+
     try {
-      await appService.saveJob({ jobId });
-      // Update local state
-      setSavedJobs((prev) =>
-        prev.includes(jobId)
-          ? prev.filter((id) => id !== jobId)
-          : [...prev, jobId]
-      );
-      // If we are in Saved tab, we might want to refetch or remove the item
+      if (wasSaved) {
+        await appService.unsaveJob({ jobId });
+      } else {
+        await appService.saveJob({ jobId });
+      }
+      // If we are in Saved tab, refetch to keep list in sync
       if (activeTab === 'Saved') {
         fetchJobs();
       }
-    } catch (error) {
-      console.log("Error saving job:", error);
+    } catch (error: any) {
+      console.log("Error toggling save job:", error);
+      // Revert optimistic update on error
+      setSavedJobs((prev) =>
+        wasSaved ? [...prev, jobId] : prev.filter((id) => id !== jobId)
+      );
+      const msg = typeof error === 'string' ? error : (error?.message || "Could not update saved job. Please try again.");
+      Alert.alert("Error", msg);
     }
   };
 
@@ -256,6 +273,11 @@ const JobsScreen = () => {
                             {item.specialty}
                           </Text>
                         )}
+                        {item.salary && formatSalary(item.salary) ? (
+                          <Text className="text-caption font-bold text-action-green bg-actionLight-green px-2 py-0.5 rounded overflow-hidden">
+                            {formatSalary(item.salary)}
+                          </Text>
+                        ) : null}
                         {item.status && (
                           <Text className="text-caption font-bold text-action-green bg-actionLight-green px-2 py-0.5 rounded overflow-hidden">
                             {item.status}
