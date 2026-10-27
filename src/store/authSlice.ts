@@ -22,10 +22,31 @@ export const initializeAuth = createAsyncThunk(
     'auth/initialize',
     async (_, { dispatch }) => {
         try {
-            const accessToken = await AsyncStorage.getItem('accessToken');
-            const refreshToken = await AsyncStorage.getItem('refreshToken');
+            let accessToken = await AsyncStorage.getItem('accessToken');
+            let refreshToken = await AsyncStorage.getItem('refreshToken');
             const userStr = await AsyncStorage.getItem('user');
             const user = userStr ? JSON.parse(userStr) : null;
+
+            if (!refreshToken) {
+                return null;
+            }
+
+            if (!accessToken && refreshToken) {
+                try {
+                    const refreshRes = await authService.refresh(refreshToken);
+                    if (refreshRes.data?.success && refreshRes.data?.data?.accessToken) {
+                        accessToken = refreshRes.data.data.accessToken;
+                        await AsyncStorage.setItem('accessToken', accessToken as string);
+                        if (refreshRes.data.data.refreshToken) {
+                            refreshToken = refreshRes.data.data.refreshToken;
+                            await AsyncStorage.setItem('refreshToken', refreshToken as string);
+                        }
+                    }
+                } catch (e) {
+                    console.log('Initial token refresh attempt failed:', e);
+                }
+            }
+
             if (accessToken && refreshToken) {
                 return { accessToken, refreshToken, user };
             }
@@ -141,8 +162,10 @@ const authSlice = createSlice({
             state.refreshToken = null;
             AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'user']);
         },
-        setCredentials: (state, action: PayloadAction<{ user: any; accessToken: string; refreshToken: string }>) => {
-            state.user = action.payload.user;
+        setCredentials: (state, action: PayloadAction<{ user?: any; accessToken: string; refreshToken: string }>) => {
+            if (action.payload.user !== undefined) {
+                state.user = action.payload.user;
+            }
             state.accessToken = action.payload.accessToken;
             state.refreshToken = action.payload.refreshToken;
         },

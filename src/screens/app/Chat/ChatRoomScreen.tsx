@@ -5,6 +5,8 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
+import { fetchUnreadChatCount } from "@/src/store/chatSlice";
 import {
   ActivityIndicator,
   FlatList,
@@ -19,6 +21,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const ChatRoomScreen = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { conversationId, name, avatar, jobTitle } = useLocalSearchParams();
   const flatListRef = useRef<FlatList>(null);
 
@@ -78,8 +81,9 @@ const ChatRoomScreen = () => {
     return () => {
       socketService.offNewMessage();
       clearInterval(interval);
+      dispatch(fetchUnreadChatCount() as any);
     };
-  }, [conversationId]);
+  }, [conversationId, dispatch]);
 
   const loadInitialData = async () => {
     try {
@@ -103,6 +107,7 @@ const ChatRoomScreen = () => {
           ? base
           : [];
         setMessages(list);
+        dispatch(fetchUnreadChatCount() as any);
       }
     } catch (error) {
       console.log("Error loading chat data:", error);

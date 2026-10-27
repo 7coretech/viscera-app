@@ -3,8 +3,22 @@ import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/src/store";
+import { useEffect } from "react";
+import { fetchUnreadChatCount } from "@/src/store/chatSlice";
+
 export default function TabsLayout() {
     const insets = useSafeAreaInsets();
+    const dispatch = useDispatch();
+    const { unreadCount } = useSelector((state: RootState) => state.chat);
+    const { accessToken } = useSelector((state: RootState) => state.auth);
+
+    useEffect(() => {
+        if (accessToken) {
+            dispatch(fetchUnreadChatCount() as any);
+        }
+    }, [accessToken, dispatch]);
   return (
     <Tabs 
 screenOptions={{
@@ -49,6 +63,14 @@ screenOptions={{
         name="chat/index"
         options={{
           title: "Chat",
+          tabBarBadge: unreadCount > 0 ? (unreadCount > 99 ? "99+" : unreadCount) : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: "#EF4444",
+            color: "#ffffff",
+            fontSize: 10,
+            fontWeight: "700",
+            lineHeight: 14,
+          },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbox" size={size} color={color} />
           ),

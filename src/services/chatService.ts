@@ -49,7 +49,21 @@ export const chatService = {
             const fallback = await chatApiClient.get('/api/v1/chat/messages/conversations');
             return fallback.data;
         }
-    }
+    },
+
+    /**
+     * Get total unread chat messages count for current user
+     */
+    getUnreadCount: async (): Promise<number> => {
+        try {
+            const res = await chatApiClient.get('/api/v1/chat/unread-count');
+            const base = res?.data || res;
+            const d = base?.data || base || {};
+            return Number(d?.unreadCount ?? d?.count ?? 0);
+        } catch {
+            return 0;
+        }
+    },
 };
 
 export default chatService;

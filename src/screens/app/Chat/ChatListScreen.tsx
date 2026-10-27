@@ -3,6 +3,8 @@ import { useTheme } from "@/src/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useState, useCallback } from "react";
+import { useDispatch } from "react-redux";
+import { fetchUnreadChatCount, setUnreadCount } from "@/src/store/chatSlice";
 import {
   ActivityIndicator,
   FlatList,
@@ -39,6 +41,7 @@ const formatMessageTime = (dateStr?: string) => {
 
 const ChatListScreen = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
   const theme = useTheme();
   const [conversations, setConversations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,22 +63,25 @@ const ChatListScreen = () => {
         ? base
         : [];
       setConversations(rawList);
+      const total = rawList.reduce((acc: number, item: any) => acc + (Number(item?.unreadCount) || 0), 0);
+      dispatch(setUnreadCount(total));
     } catch (error) {
       console.log("Error fetching conversations:", error);
     } finally {
       setLoading(false);
       if (isRefresh) setRefreshing(false);
     }
-  }, []);
+  }, [dispatch]);
 
   useFocusEffect(
     useCallback(() => {
       fetchConversations();
+      dispatch(fetchUnreadChatCount() as any);
       const interval = setInterval(() => {
         fetchConversations();
       }, 5000);
       return () => clearInterval(interval);
-    }, [fetchConversations])
+    }, [fetchConversations, dispatch])
   );
 
   if (loading && !refreshing) {

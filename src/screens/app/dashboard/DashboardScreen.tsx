@@ -12,7 +12,8 @@ import {
 } from "react-native";
 import { PieChart } from "react-native-gifted-charts";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUnreadChatCount } from "@/src/store/chatSlice";
 import { MyApplications } from "./MyApplications";
 
 const StatCard = ({
@@ -58,7 +59,9 @@ const LegendItem = ({ color, label }: { color: string; label: string }) => (
 
 const DashboardScreen = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { accessToken } = useSelector((state: RootState) => state.auth);
+  const { unreadCount: unreadChatCount } = useSelector((state: RootState) => state.chat);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [greeting, setGreeting] = useState("Good Morning");
   const [completionScore, setCompletionScore] = useState<any>(null);
@@ -74,9 +77,10 @@ const DashboardScreen = () => {
         fetchCompletionScore();
         fetchJobCounts();
         fetchNotificationCounts();
+        dispatch(fetchUnreadChatCount() as any);
       }
       updateGreeting();
-    }, [accessToken])
+    }, [accessToken, dispatch])
   );
 
   const fetchNotificationCounts = async () => {
@@ -288,7 +292,7 @@ const DashboardScreen = () => {
             <StatCard
               icon="chatbox"
               title="Messages"
-              value="3 new"
+              value={unreadChatCount > 0 ? `${unreadChatCount} new` : "0 new"}
               bgColor="#FFF7ED"
               iconColor="#F97316"
               onPress={() => router.push("/app/(tabs)/chat")}
