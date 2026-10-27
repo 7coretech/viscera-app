@@ -221,37 +221,55 @@ const NotificationScreen = () => {
     }
 
     const raw = item.raw || {};
+    const notifData = raw.data || {};
     const text = `${item.title} ${item.message}`.toLowerCase();
+    const convId =
+      raw.conversationId ||
+      raw.applicationId ||
+      notifData.conversationId ||
+      notifData.applicationId;
+    const jobId = raw.jobId || notifData.jobId;
 
     // Smart routing based on notification intent
     if (
       item.type === "message" ||
-      raw.conversationId ||
-      raw.applicationId ||
+      convId ||
       text.includes("shortlist") ||
+      text.includes("interview") ||
+      text.includes("offer") ||
       text.includes("message")
     ) {
-      const convId = raw.conversationId || raw.applicationId;
       if (convId) {
         router.push({
           pathname: "/app/ChatRoom",
           params: {
             conversationId: convId,
-            name: raw.senderName || "Recruiter",
+            name: raw.senderName || notifData.senderName || "Recruiter",
           },
         });
       } else {
         router.push("/app/(tabs)/chat");
       }
-    } else if (raw.jobId || text.includes("job")) {
-      if (raw.jobId) {
+    } else if (
+      text.includes("applied") ||
+      text.includes("application submitted") ||
+      text.includes("hired")
+    ) {
+      router.push({
+        pathname: "/app/(tabs)/jobs",
+        params: { tab: "applied" },
+      });
+    } else if (jobId || text.includes("job")) {
+      if (jobId) {
         router.push({
           pathname: "/app/JobDetail",
-          params: { jobId: raw.jobId },
+          params: { jobId },
         });
       } else {
         router.push("/app/(tabs)/jobs");
       }
+    } else if (text.includes("profile") || text.includes("license")) {
+      router.push("/app/(tabs)/profile");
     }
   };
 
