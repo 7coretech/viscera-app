@@ -6,9 +6,10 @@ import { appService } from "@/src/services/appApi/appService";
 import { useTheme } from "@/src/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Image, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
@@ -23,7 +24,7 @@ const GeneralInfo = () => {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [newProfileImage, setNewProfileImage] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
+  const [newProfileImage, setNewProfileImage] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -51,15 +52,45 @@ const GeneralInfo = () => {
 
   const handlePickImage = async () => {
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/jpeg", "image/png", "image/jpg"],
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permission.granted) {
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ['images'],
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.8,
+        });
+
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+          const asset = result.assets[0];
+          const uri = asset.uri;
+          let name = asset.fileName || 'profile.jpg';
+          if (!name.includes('.')) {
+            name = `${name}.jpg`;
+          }
+          const mimeType = asset.mimeType || 'image/jpeg';
+
+          setNewProfileImage({
+            uri,
+            name,
+            mimeType,
+          });
+          setProfileImage(uri);
+          return;
+        }
+        if (result.canceled) return;
+      }
+
+      // Fallback to DocumentPicker if ImagePicker permissions not granted
+      const docResult = await DocumentPicker.getDocumentAsync({
+        type: ["image/jpeg", "image/png", "image/jpg", "image/*"],
         copyToCacheDirectory: true,
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const file = result.assets[0];
+      if (!docResult.canceled && docResult.assets && docResult.assets.length > 0) {
+        const file = docResult.assets[0];
         setNewProfileImage(file);
-        setProfileImage(file.uri); // Optimistic update for preview
+        setProfileImage(file.uri);
       }
     } catch (error) {
       console.log('Error picking image:', error);
@@ -85,11 +116,22 @@ const GeneralInfo = () => {
       formData.append('state', state);
 
       if (newProfileImage) {
-        formData.append('profilePicture', {
-          uri: newProfileImage.uri,
-          name: newProfileImage.name || 'profile-picture.jpg',
-          type: newProfileImage.mimeType || 'image/jpeg',
-        } as any);
+        const fileUri = newProfileImage.uri;
+        let fileName = newProfileImage.name || 'profile.jpg';
+        if (!fileName.includes('.')) {
+          fileName = `${fileName}.jpg`;
+        }
+        const fileType = newProfileImage.mimeType || 'image/jpeg';
+
+        const fileObj = {
+          uri: Platform.OS === 'android' ? fileUri : fileUri.replace('file://', ''),
+          name: fileName,
+          type: fileType,
+        };
+
+        // Append 'profile' (standard backend key) and 'profilePicture' (alternative key)
+        formData.append('profile', fileObj as any);
+        formData.append('profilePicture', fileObj as any);
       }
 
       const response = await appService.updateUserProfile(formData);
@@ -117,12 +159,18 @@ const GeneralInfo = () => {
           }
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log('Error updating profile:', error);
+      const errMsg =
+        typeof error === 'string'
+          ? error
+          : error?.response?.data?.message ||
+            error?.message ||
+            'Failed to update profile';
       Toast.show({
         type: 'error',
         text1: 'Update Failed',
-        text2: 'Failed to update profile',
+        text2: errMsg,
       });
     } finally {
       setLoading(false);

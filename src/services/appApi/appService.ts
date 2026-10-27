@@ -5,9 +5,9 @@ import { APP_ENDPOINTS } from './appApi';
 const API_BASE_URL = 'https://api.visceraconnect.com';
 
 const uploadFormData = async (endpoint: string, formData: FormData, method = 'POST') => {
-    const token = await AsyncStorage.getItem('accessToken');
+    let token = await AsyncStorage.getItem('accessToken');
     const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
+    let response = await fetch(url, {
         method,
         headers: {
             'Accept': 'application/json',
@@ -15,7 +15,47 @@ const uploadFormData = async (endpoint: string, formData: FormData, method = 'PO
         },
         body: formData,
     });
-    const data = await response.json();
+
+    // Handle 401 token refresh if needed
+    if (response.status === 401) {
+        const refreshToken = await AsyncStorage.getItem('refreshToken');
+        if (refreshToken) {
+            try {
+                const refreshRes = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refreshToken }),
+                });
+                const refreshData = await refreshRes.json();
+                if (refreshData?.success && refreshData?.data?.accessToken) {
+                    token = refreshData.data.accessToken;
+                    await AsyncStorage.setItem('accessToken', token as string);
+                    if (refreshData.data.refreshToken) {
+                        await AsyncStorage.setItem('refreshToken', refreshData.data.refreshToken);
+                    }
+                    // Retry upload with new token
+                    response = await fetch(url, {
+                        method,
+                        headers: {
+                            'Accept': 'application/json',
+                            Authorization: `Bearer ${token}`,
+                        },
+                        body: formData,
+                    });
+                }
+            } catch (e) {
+                console.log('Token refresh failed during uploadFormData:', e);
+            }
+        }
+    }
+
+    let data: any = {};
+    try {
+        data = await response.json();
+    } catch {
+        data = { message: 'Failed to parse response' };
+    }
+
     if (!response.ok) {
         throw data?.message || data?.error || 'Upload failed';
     }
