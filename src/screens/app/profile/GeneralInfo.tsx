@@ -58,13 +58,13 @@ const GeneralInfo = () => {
           mediaTypes: ['images'],
           allowsEditing: true,
           aspect: [1, 1],
-          quality: 0.8,
+          quality: 0.5,
         });
 
         if (!result.canceled && result.assets && result.assets.length > 0) {
           const asset = result.assets[0];
           const uri = asset.uri;
-          let name = asset.fileName || 'profile.jpg';
+          let name = asset.fileName || `avatar_${Date.now()}.jpg`;
           if (!name.includes('.')) {
             name = `${name}.jpg`;
           }
@@ -106,57 +106,74 @@ const GeneralInfo = () => {
     try {
       setLoading(true);
 
-      const formData = new FormData();
-      formData.append('fullName', firstName);
-      formData.append('email', email);
-      formData.append('mobile', mobile);
-      formData.append('workStatus', status);
-      formData.append('address', address);
-      formData.append('city', city);
-      formData.append('state', state);
+      let response: any;
 
       if (newProfileImage) {
+        const formData = new FormData();
+        formData.append('fullName', firstName.trim());
+        formData.append('email', email.trim());
+        formData.append('mobile', mobile.trim());
+        formData.append('workStatus', status);
+        formData.append('address', address);
+        formData.append('city', city);
+        formData.append('state', state);
+
         const fileUri = newProfileImage.uri;
-        let fileName = newProfileImage.name || 'profile.jpg';
+        let fileName = newProfileImage.name || `avatar_${Date.now()}.jpg`;
         if (!fileName.includes('.')) {
           fileName = `${fileName}.jpg`;
         }
         const fileType = newProfileImage.mimeType || 'image/jpeg';
 
+        const cleanUri =
+          Platform.OS === 'android'
+            ? fileUri
+            : fileUri.replace('file://', '');
+
         const fileObj = {
-          uri: Platform.OS === 'android' ? fileUri : fileUri.replace('file://', ''),
+          uri: cleanUri,
           name: fileName,
           type: fileType,
         };
 
-        // Append 'profile' (standard backend key) and 'profilePicture' (alternative key)
+        // Standard backend key for profile image upload
         formData.append('profile', fileObj as any);
-        formData.append('profilePicture', fileObj as any);
+
+        response = await appService.updateUserProfile(formData);
+      } else {
+        // Direct clean JSON update when no image is being uploaded
+        response = await appService.updateUserProfileJson({
+          fullName: firstName.trim(),
+          email: email.trim(),
+          mobile: mobile.trim(),
+          workStatus: status,
+          address: address,
+          city: city,
+          state: state,
+        });
       }
 
-      const response = await appService.updateUserProfile(formData);
-
-      if (response.data.success) {
+      if (response?.data?.success) {
         Toast.show({
           type: 'success',
           text1: 'Success',
           text2: 'Profile updated successfully',
         });
 
-        // Refresh data to ensure synchronization
+        // Refresh data & cache to AsyncStorage
         if (response.data.data) {
-          const { fullName, email, mobile, workStatus, profileImage, address, city, state } = response.data.data;
+          const { fullName, email: resEmail, mobile: resMobile, workStatus, profileImage: resImg, address: resAddr, city: resCity, state: resState } = response.data.data;
           setFirstName(fullName || firstName);
-          setEmail(email || email);
-          setMobile(mobile || mobile);
+          setEmail(resEmail || email);
+          setMobile(resMobile || mobile);
           setStatus(workStatus || status);
-          setAddress(address || address);
-          setCity(city || city);
-          setState(state || state);
-          if (profileImage?.url) {
-            setProfileImage(profileImage.url);
-            setNewProfileImage(null);
+          setAddress(resAddr || address);
+          setCity(resCity || city);
+          setState(resState || state);
+          if (resImg?.url) {
+            setProfileImage(resImg.url);
           }
+          setNewProfileImage(null);
         }
       }
     } catch (error: any) {

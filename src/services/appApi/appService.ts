@@ -49,15 +49,25 @@ const uploadFormData = async (endpoint: string, formData: FormData, method = 'PO
         }
     }
 
+    const rawText = await response.text();
     let data: any = {};
     try {
-        data = await response.json();
+        data = JSON.parse(rawText);
     } catch {
-        data = { message: 'Failed to parse response' };
+        const cleanText = rawText.replace(/<[^>]*>?/gm, '').trim();
+        if (response.status === 413) {
+            data = { message: 'Image file size is too large. Please select a smaller photo.' };
+        } else if (response.status === 401) {
+            data = { message: 'Authentication expired. Please log in again.' };
+        } else if (response.status === 500) {
+            data = { message: 'Server upload error. Please try again.' };
+        } else {
+            data = { message: cleanText || `Upload failed with status ${response.status}` };
+        }
     }
 
     if (!response.ok) {
-        throw data?.message || data?.error || 'Upload failed';
+        throw data?.message || data?.error || `Upload failed (${response.status})`;
     }
     return { data, status: response.status };
 };
@@ -117,6 +127,7 @@ export const appService = {
     // Profile Picture Method
     updateProfilePicture: (formData: FormData) => uploadFormData(APP_ENDPOINTS.PROFILE_PICTURE, formData, 'PUT'),
     updateUserProfile: (formData: FormData) => uploadFormData(APP_ENDPOINTS.GET_USER_PROFILE, formData, 'PATCH'),
+    updateUserProfileJson: (data: any) => apiClient.patch(APP_ENDPOINTS.GET_USER_PROFILE, data),
 
     // Jobs Methods
     getJobs: () => apiClient.get(APP_ENDPOINTS.JOBS),
