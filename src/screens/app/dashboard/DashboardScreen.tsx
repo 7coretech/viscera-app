@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { appService } from "@/src/services/appApi/appService";
 import { RootState } from "@/src/store";
 import { Ionicons } from "@expo/vector-icons";
@@ -111,6 +112,7 @@ const DashboardScreen = () => {
       const response = await appService.getUserProfile();
       if (response.data.success) {
         setUserProfile(response.data.data);
+        await AsyncStorage.setItem("user", JSON.stringify(response.data.data));
       }
     } catch (error) {
       console.log("Error fetching profile on dashboard:", error);

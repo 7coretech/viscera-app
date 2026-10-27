@@ -176,6 +176,12 @@ const ChatListScreen = () => {
 
           const unread = Number(item.unreadCount || 0);
 
+          const recipientId =
+            item.participant?.userId ||
+            item.participantId ||
+            item.recipientId ||
+            "";
+
           return (
             <TouchableOpacity
               onPress={() =>
@@ -186,6 +192,7 @@ const ChatListScreen = () => {
                     name: recipientName,
                     avatar: avatarUrl,
                     jobTitle: jobTitle,
+                    recipientId: recipientId,
                   },
                 })
               }

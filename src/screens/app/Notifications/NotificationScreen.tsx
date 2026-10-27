@@ -245,6 +245,7 @@ const NotificationScreen = () => {
           params: {
             conversationId: convId,
             name: raw.senderName || notifData.senderName || "Recruiter",
+            recipientId: raw.senderId || notifData.senderId || "",
           },
         });
       } else {

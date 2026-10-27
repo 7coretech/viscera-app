@@ -20,14 +20,31 @@ class SocketService {
         this.socket.on('connect', async () => {
             console.log('✅ Connected to socket server');
             const token = await AsyncStorage.getItem('accessToken');
+            let user: any = null;
             const userStr = await AsyncStorage.getItem('user');
-            if (token && userStr) {
-                const user = JSON.parse(userStr);
+            if (userStr) {
+                try {
+                    user = JSON.parse(userStr);
+                } catch {}
+            }
+            let userId = user?.userId || user?.id || user?._id;
+            if (!userId && token) {
+                try {
+                    const parts = token.split('.');
+                    if (parts.length === 3) {
+                        const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                        const jsonStr = typeof atob === 'function' ? atob(base64) : Buffer.from(base64, 'base64').toString('utf8');
+                        const payload = JSON.parse(jsonStr);
+                        userId = payload?.id;
+                    }
+                } catch {}
+            }
+            if (token && userId) {
                 this.socket?.emit('register', {
                     token,
                     accessToken: token,
-                    userId: user.userId || user.id || user._id,
-                    role: user.role || 'NURSE'
+                    userId,
+                    role: user?.role || 'NURSE'
                 });
             }
         });
