@@ -18,6 +18,15 @@ export const authService = {
     refresh: (refreshToken: string) => {
         return apiClient.post(AUTH_ENDPOINTS.REFRESH, { refreshToken });
     },
+    forgotPassword: (email: string) => {
+        return apiClient.post(AUTH_ENDPOINTS.FORGOT_PASSWORD, { email });
+    },
+    verifyForgotPasswordOtp: (payload: { email: string; otp: string }) => {
+        return apiClient.post(AUTH_ENDPOINTS.VERIFY_FORGOT_PASSWORD_OTP, payload);
+    },
+    resetPassword: (payload: { email: string; resetToken: string; newPassword: string }) => {
+        return apiClient.post(AUTH_ENDPOINTS.RESET_PASSWORD, payload);
+    },
 };
 
 // OTP Service Methods

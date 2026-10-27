@@ -134,7 +134,10 @@ const LoginScreen = () => {
                   />
                 </View>
               </View>
-              <TouchableOpacity className="mb-4 mt-1 self-end">
+              <TouchableOpacity
+                className="mb-4 mt-1 self-end"
+                onPress={() => router.push("/auth/forgot-password/forgot-password" as any)}
+              >
                 <Text className="text-primary-main text-body1 font-bold">
                   Forgot password?
                 </Text>
