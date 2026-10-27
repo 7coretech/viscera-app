@@ -5,10 +5,12 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { Image, Linking, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { cleanProfileImageUrl } from "@/src/utils/imageUtils";
 
 const ProfileScreen = () => {
   const router = useRouter();
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [imageError, setImageError] = useState(false);
   const [completionScore, setCompletionScore] = useState<any>(null);
   const [licenseCount, setLicenseCount] = useState<number>(0);
   const [resumeCount, setResumeCount] = useState<number>(0);
@@ -35,6 +37,7 @@ const ProfileScreen = () => {
 
       if (profileRes.status === "fulfilled" && profileRes.value.data?.success) {
         setUserProfile(profileRes.value.data.data);
+        setImageError(false);
       }
 
       if (scoreRes.status === "fulfilled" && scoreRes.value.data?.success) {
@@ -132,18 +135,25 @@ const ProfileScreen = () => {
                 </TouchableOpacity>
               </View>
               <View className="flex-row items-center mt-4 mb-4">
-                {userProfile?.profileImage?.url ? (
-                  <Image
-                    source={{ uri: userProfile.profileImage.url }}
-                    className="w-16 h-16 rounded-full border-2 border-gray-white"
-                  />
-                ) : (
-                  <View className="w-16 h-16 rounded-full bg-primary-light1 items-center justify-center border-2 border-gray-white">
-                    <Text className="text-h3 font-bold text-primary-main">
-                      {getInitials(userProfile?.fullName || "")}
-                    </Text>
-                  </View>
-                )}
+                {(() => {
+                  const avatarUrl = cleanProfileImageUrl(userProfile?.profileImage);
+                  if (avatarUrl && !imageError) {
+                    return (
+                      <Image
+                        source={{ uri: avatarUrl }}
+                        className="w-16 h-16 rounded-full border-2 border-gray-white"
+                        onError={() => setImageError(true)}
+                      />
+                    );
+                  }
+                  return (
+                    <View className="w-16 h-16 rounded-full bg-primary-light1 items-center justify-center border-2 border-gray-white">
+                      <Text className="text-h3 font-bold text-primary-main">
+                        {getInitials(userProfile?.fullName || "")}
+                      </Text>
+                    </View>
+                  );
+                })()}
 
                 <View className="ml-4">
                   <Text className="text-gray-white font-semibold text-h3">

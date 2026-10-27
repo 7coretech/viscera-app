@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { cleanProfileImageUrl } from "@/src/utils/imageUtils";
 
 const formatMessageTime = (dateStr?: string) => {
   if (!dateStr) return "";
@@ -148,9 +149,10 @@ const ChatListScreen = () => {
               ? `Recruiter (${item.application.jobTitle})`
               : "Recruiter");
           const avatarUrl =
-            item.participant?.avatar ||
-            item.recipientAvatar ||
-            "";
+            cleanProfileImageUrl(
+              item.participant?.avatar ||
+              item.recipientAvatar
+            ) || "";
           const initialLetter = (recipientName || "R").charAt(0).toUpperCase();
           const jobTitle = item.application?.jobTitle || item.jobTitle || "";
 

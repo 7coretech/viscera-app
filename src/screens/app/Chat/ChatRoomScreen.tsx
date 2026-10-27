@@ -22,6 +22,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 import { toast } from "@/src/utils/toast";
+import { cleanProfileImageUrl } from "@/src/utils/imageUtils";
 
 // Safe Base64 decoder fallback without external dependencies
 const safeBase64Decode = (str: string): string => {
@@ -74,6 +75,7 @@ const ChatRoomScreen = () => {
   const dispatch = useDispatch();
   const { conversationId, name, avatar, jobTitle, recipientId } =
     useLocalSearchParams();
+  const cleanAvatar = cleanProfileImageUrl(avatar);
   const flatListRef = useRef<FlatList>(null);
 
   const [messages, setMessages] = useState<any[]>([]);
@@ -331,9 +333,9 @@ const ChatRoomScreen = () => {
             <Ionicons name="arrow-back" size={22} color="#1F2937" />
           </TouchableOpacity>
 
-          {avatar ? (
+          {cleanAvatar ? (
             <Image
-              source={{ uri: avatar as string }}
+              source={{ uri: cleanAvatar }}
               className="w-10 h-10 rounded-full mr-3 border border-gray-200 bg-gray-100"
             />
           ) : (
@@ -446,9 +448,9 @@ const ChatRoomScreen = () => {
                   {/* Recruiter Avatar on the left */}
                   {!isMe && (
                     <View className="mr-2 self-end mb-1">
-                      {avatar ? (
+                      {cleanAvatar ? (
                         <Image
-                          source={{ uri: avatar as string }}
+                          source={{ uri: cleanAvatar }}
                           className="w-7 h-7 rounded-full border border-gray-200 bg-gray-100"
                         />
                       ) : (

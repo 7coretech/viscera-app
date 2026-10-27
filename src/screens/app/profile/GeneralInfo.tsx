@@ -12,6 +12,7 @@ import React, { useEffect, useState } from "react";
 import { Image, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
+import { cleanProfileImageUrl } from "@/src/utils/imageUtils";
 
 const GeneralInfo = () => {
   const theme = useTheme();
@@ -24,6 +25,7 @@ const GeneralInfo = () => {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
   const [newProfileImage, setNewProfileImage] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -43,7 +45,9 @@ const GeneralInfo = () => {
         setAddress(address || "");
         setCity(city || "");
         setState(state || "");
-        setProfileImage(profileImage?.url || null);
+        const cleanUrl = cleanProfileImageUrl(profileImage);
+        setProfileImage(cleanUrl);
+        setImageError(false);
       }
     } catch (error) {
       console.log('Error fetching profile:', error);
@@ -76,6 +80,7 @@ const GeneralInfo = () => {
             mimeType,
           });
           setProfileImage(uri);
+          setImageError(false);
           return;
         }
         if (result.canceled) return;
@@ -170,8 +175,10 @@ const GeneralInfo = () => {
           setAddress(resAddr || address);
           setCity(resCity || city);
           setState(resState || state);
-          if (resImg?.url) {
-            setProfileImage(resImg.url);
+          const cleanUrl = cleanProfileImageUrl(resImg);
+          if (cleanUrl) {
+            setProfileImage(cleanUrl);
+            setImageError(false);
           }
           setNewProfileImage(null);
         }
@@ -232,10 +239,11 @@ const GeneralInfo = () => {
       >
         <View className="items-center mb-6">
           <View className="relative">
-            {profileImage ? (
+            {profileImage && !imageError ? (
               <Image
                 source={{ uri: profileImage }}
                 className="w-28 h-28 rounded-full"
+                onError={() => setImageError(true)}
               />
             ) : (
               <View className="w-28 h-28 rounded-full bg-primary-light1 items-center justify-center border-2 border-primary-light2">
