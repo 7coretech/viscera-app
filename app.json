@@ -11,11 +11,16 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.viscera.app",
+      "buildNumber": "1",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Viscera requires camera access to take profile photos and scan healthcare license and verification documents.",
+        "NSPhotoLibraryUsageDescription": "Viscera requires photo library access to select and upload your profile picture and medical certification documents.",
+        "NSPhotoLibraryAddUsageDescription": "Viscera requires access to save downloaded documents and confirmation receipts to your photo library."
       }
     },
     "android": {
+      "versionCode": 1,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -23,6 +28,13 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "permissions": [
+        "INTERNET",
+        "CAMERA",
+        "READ_MEDIA_IMAGES",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED"
+      ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.viscera.app"
@@ -50,6 +62,13 @@
         "expo-notifications",
         {
           "color": "#2563EB"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Viscera requires photo library access to allow you to upload your profile avatar and medical certification documents.",
+          "cameraPermission": "Viscera requires camera access to take profile photos and scan your healthcare licenses."
         }
       ]
     ],

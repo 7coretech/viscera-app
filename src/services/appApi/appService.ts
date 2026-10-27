@@ -145,6 +145,7 @@ export const appService = {
     getUnreadNotificationCount: () => apiClient.get('/api/v1/notifications/unread-counts'),
     markNotificationAsRead: (id: string) => apiClient.put(`/api/v1/notifications/${id}/read`),
     deleteNotification: (id: string) => apiClient.delete(`/api/v1/notifications/${id}`),
+    deleteAccount: () => apiClient.delete('/api/v1/users/account'),
 };
 
 export default {

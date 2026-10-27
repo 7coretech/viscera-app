@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Image, Linking, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const ProfileScreen = () => {
@@ -299,6 +299,26 @@ const ProfileScreen = () => {
               iconColor="#0284C7"
               route={"/app/Profile/travelPrefference"}
             />
+          </View>
+
+          {/* Quick Legal & Settings Links */}
+          <View className="mt-4 pt-4 border-t border-gray-200/60 items-center">
+            <View className="flex-row items-center gap-4 mb-2">
+              <TouchableOpacity onPress={() => router.push("/app/Settings")}>
+                <Text className="text-xs font-semibold text-primary-main">Settings</Text>
+              </TouchableOpacity>
+              <Text className="text-gray-300">•</Text>
+              <TouchableOpacity onPress={() => Linking.openURL("https://app.visceraconnect.com/privacy")}>
+                <Text className="text-xs font-semibold text-primary-main">Privacy Policy</Text>
+              </TouchableOpacity>
+              <Text className="text-gray-300">•</Text>
+              <TouchableOpacity onPress={() => Linking.openURL("https://app.visceraconnect.com/terms")}>
+                <Text className="text-xs font-semibold text-primary-main">Terms</Text>
+              </TouchableOpacity>
+            </View>
+            <Text className="text-[11px] text-gray-400 font-medium">
+              Viscera Healthcare v1.0.0 (Build 1)
+            </Text>
           </View>
         </ScrollView>
       </View>

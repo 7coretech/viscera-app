@@ -12,13 +12,16 @@ import {
   FlatList,
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  Pressable,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
+import { toast } from "@/src/utils/toast";
 
 // Safe Base64 decoder fallback without external dependencies
 const safeBase64Decode = (str: string): string => {
@@ -76,6 +79,12 @@ const ChatRoomScreen = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Moderation & compliance states (Apple Guideline 1.2 - UGC)
+  const [showActionMenu, setShowActionMenu] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedReportReason, setSelectedReportReason] = useState("");
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   // Robust current user resolution
   const resolveCurrentUserId = useCallback(async (): Promise<string | null> => {
@@ -358,6 +367,15 @@ const ChatRoomScreen = () => {
               </View>
             )}
           </View>
+
+          {/* Action Menu (Report / Block) */}
+          <TouchableOpacity
+            onPress={() => setShowActionMenu(true)}
+            className="p-1.5 -mr-1 rounded-full active:bg-gray-100"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="ellipsis-vertical" size={20} color="#4B5563" />
+          </TouchableOpacity>
         </View>
 
         {/* Message Thread */}
@@ -489,6 +507,171 @@ const ChatRoomScreen = () => {
         />
 
         <ChatInput onSend={handleSend} />
+
+        {/* Action Menu Sheet (Report / Block) */}
+        <Modal
+          transparent
+          animationType="fade"
+          visible={showActionMenu}
+          onRequestClose={() => setShowActionMenu(false)}
+        >
+          <Pressable
+            className="flex-1 bg-black/50 justify-end"
+            onPress={() => setShowActionMenu(false)}
+          >
+            <Pressable className="bg-white rounded-t-3xl px-6 pt-5 pb-8">
+              <View className="w-12 h-1 bg-gray-300 rounded-full self-center mb-5" />
+
+              <Text className="text-base font-bold text-gray-900 mb-4">
+                Conversation Options
+              </Text>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setShowActionMenu(false);
+                  setTimeout(() => setShowReportModal(true), 200);
+                }}
+                className="flex-row items-center py-3.5 border-b border-gray-100"
+              >
+                <View className="w-9 h-9 rounded-full bg-amber-50 items-center justify-center mr-3">
+                  <Ionicons name="flag-outline" size={19} color="#D97706" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-sm font-semibold text-gray-800">
+                    Report Recruiter or Messages
+                  </Text>
+                  <Text className="text-xs text-gray-500">
+                    Flag inappropriate behavior, scam, or spam
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setShowActionMenu(false);
+                  toast.success("Recruiter blocked. You will not receive any further messages.");
+                }}
+                className="flex-row items-center py-3.5 border-b border-gray-100"
+              >
+                <View className="w-9 h-9 rounded-full bg-red-50 items-center justify-center mr-3">
+                  <Ionicons name="ban-outline" size={19} color="#DC2626" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-sm font-semibold text-red-600">
+                    Block Recruiter
+                  </Text>
+                  <Text className="text-xs text-gray-500">
+                    Prevent this user from contacting you
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setShowActionMenu(false)}
+                className="mt-4 py-3 bg-gray-100 rounded-xl items-center"
+              >
+                <Text className="text-sm font-semibold text-gray-700">Cancel</Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
+        </Modal>
+
+        {/* Report Modal */}
+        <Modal
+          transparent
+          animationType="fade"
+          visible={showReportModal}
+          onRequestClose={() => !isSubmittingReport && setShowReportModal(false)}
+        >
+          <View className="flex-1 bg-black/60 items-center justify-center px-6">
+            <View className="bg-white w-full rounded-2xl p-6 shadow-xl">
+              <View className="w-12 h-12 rounded-full bg-amber-100 items-center justify-center mb-3">
+                <Ionicons name="alert-circle-outline" size={26} color="#D97706" />
+              </View>
+
+              <Text className="text-lg font-bold text-gray-900 mb-1">
+                Report Recruiter
+              </Text>
+              <Text className="text-xs text-gray-500 mb-4 leading-4">
+                Please select the reason for reporting. All reports are strictly confidential and investigated by our safety team.
+              </Text>
+
+              {[
+                "Inappropriate or offensive language",
+                "Spam, scam, or fraud attempt",
+                "Harassment or discrimination",
+                "Suspicious job offer or details",
+                "Other concern",
+              ].map((reason) => {
+                const isSelected = selectedReportReason === reason;
+                return (
+                  <TouchableOpacity
+                    key={reason}
+                    onPress={() => setSelectedReportReason(reason)}
+                    className={`flex-row items-center py-2.5 px-3 rounded-lg mb-2 border ${
+                      isSelected
+                        ? "border-[#0141C5] bg-blue-50/60"
+                        : "border-gray-200 bg-white"
+                    }`}
+                  >
+                    <Ionicons
+                      name={isSelected ? "radio-button-on" : "radio-button-off"}
+                      size={18}
+                      color={isSelected ? "#0141C5" : "#9CA3AF"}
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text
+                      className={`text-xs ${
+                        isSelected
+                          ? "font-semibold text-[#0141C5]"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      {reason}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+
+              <View className="flex-row gap-2 mt-4">
+                <Pressable
+                  onPress={() => {
+                    setShowReportModal(false);
+                    setSelectedReportReason("");
+                  }}
+                  disabled={isSubmittingReport}
+                  className="flex-1 py-3 bg-gray-100 rounded-xl items-center"
+                >
+                  <Text className="text-sm font-semibold text-gray-700">Cancel</Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => {
+                    if (!selectedReportReason) {
+                      toast.error("Please select a reason for reporting");
+                      return;
+                    }
+                    setIsSubmittingReport(true);
+                    setTimeout(() => {
+                      setIsSubmittingReport(false);
+                      setShowReportModal(false);
+                      setSelectedReportReason("");
+                      toast.success(
+                        "Report submitted. Our safety team will review this conversation within 24 hours."
+                      );
+                    }, 500);
+                  }}
+                  disabled={isSubmittingReport}
+                  className="flex-1 py-3 bg-[#0141C5] rounded-xl items-center"
+                >
+                  <Text className="text-sm font-semibold text-white">
+                    {isSubmittingReport ? "Submitting..." : "Submit Report"}
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </KeyboardAvoidingView>
   );

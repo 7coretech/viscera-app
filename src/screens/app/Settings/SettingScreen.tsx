@@ -1,11 +1,14 @@
 import { useAppDispatch } from "@/src/hooks/store";
+import { appService } from "@/src/services/appApi/appService";
 import { logoutUser } from "@/src/store/authSlice";
 import { toast } from "@/src/utils/toast";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   FlatList,
+  Linking,
   Modal,
   Pressable,
   Text,
@@ -54,13 +57,43 @@ const settingsData = [
   },
   {
     id: "5",
+    title: "Privacy Policy",
+    icon: "shield-checkmark-outline",
+    bg: "bg-blue-50",
+    iconColor: "#0141C5",
+    showArrow: true,
+    action: "privacy_policy",
+  },
+  {
+    id: "6",
+    title: "Terms of Service",
+    icon: "document-text-outline",
+    bg: "bg-blue-50",
+    iconColor: "#0141C5",
+    showArrow: true,
+    action: "terms_of_service",
+  },
+  {
+    id: "7",
     title: "Logout",
-    icon: "log-out",
+    icon: "log-out-outline",
     bg: "bg-actionLight-red",
     iconColor: "#963939",
     textColor: "text-action-red",
     arrowColor: "#963939",
     showArrow: true,
+    action: "logout",
+  },
+  {
+    id: "8",
+    title: "Delete Account",
+    icon: "trash-outline",
+    bg: "bg-red-50",
+    iconColor: "#DC2626",
+    textColor: "text-red-600",
+    arrowColor: "#DC2626",
+    showArrow: true,
+    action: "delete_account",
   },
 ];
 
@@ -68,7 +101,9 @@ const SettingScreen = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -84,14 +119,36 @@ const SettingScreen = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      await appService.deleteAccount();
+      await dispatch(logoutUser()).unwrap().catch(() => {});
+      await AsyncStorage.clear();
+      setShowDeleteModal(false);
+      toast.success("Your account has been deleted.");
+      router.replace("/auth/login/login");
+    } catch (err: any) {
+      toast.error(
+        typeof err === "string"
+          ? err
+          : err?.response?.data?.message || err?.message || "Failed to delete account"
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <SafeAreaView className='flex-1 bg-gray-white w-full"'>
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-light">
-        <View className="flex-row gap-4">
+    <SafeAreaView className="flex-1 bg-gray-white w-full">
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-light bg-white">
+        <View className="flex-row items-center gap-3">
           <TouchableOpacity
             onPress={() => {
               router.push("/app/profile");
             }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons name="arrow-back" size={22} color="#4D4D4D" />
           </TouchableOpacity>
@@ -104,12 +161,32 @@ const SettingScreen = () => {
       <FlatList
         data={settingsData}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 40 }}
+        ListFooterComponent={
+          <View className="items-center justify-center mt-8 pb-4">
+            <Text className="text-xs text-gray-400 font-medium">
+              Viscera Healthcare v1.0.0 (Build 1)
+            </Text>
+            <Text className="text-[11px] text-gray-400 mt-1">
+              © {new Date().getFullYear()} Viscera Inc. All rights reserved.
+            </Text>
+          </View>
+        }
         renderItem={({ item }) => (
           <TouchableOpacity
             onPress={() => {
-              if (item.title === "Logout") {
+              if (item.action === "logout") {
                 setShowLogoutModal(true);
+              } else if (item.action === "delete_account") {
+                setShowDeleteModal(true);
+              } else if (item.action === "privacy_policy") {
+                Linking.openURL("https://app.visceraconnect.com/privacy").catch(() => {
+                  toast.error("Unable to open browser");
+                });
+              } else if (item.action === "terms_of_service") {
+                Linking.openURL("https://app.visceraconnect.com/terms").catch(() => {
+                  toast.error("Unable to open browser");
+                });
               } else if (item.route) {
                 router.push(item.route as any);
               }
@@ -127,8 +204,9 @@ const SettingScreen = () => {
                 />
               </View>
               <Text
-                className={`text-body1 font-medium ${item.textColor || "text-text-primary"
-                  }`}
+                className={`text-body1 font-medium ${
+                  item.textColor || "text-text-primary"
+                }`}
               >
                 {item.title}
               </Text>
@@ -152,15 +230,15 @@ const SettingScreen = () => {
         )}
       />
 
+      {/* Logout Modal */}
       <Modal
         transparent
         animationType="fade"
         visible={showLogoutModal}
         onRequestClose={() => setShowLogoutModal(false)}
       >
-        <View className="flex-1 bg-black/40 items-center justify-center px-6">
-          <View className="bg-white w-full rounded-2xl p-6 items-center">
-            {/* Icon */}
+        <View className="flex-1 bg-black/50 items-center justify-center px-6">
+          <View className="bg-white w-full rounded-2xl p-6 items-center shadow-lg">
             <View className="w-14 h-14 rounded-full bg-red-100 items-center justify-center mb-4">
               <Ionicons name="log-out-outline" size={26} color="#E53935" />
             </View>
@@ -177,7 +255,7 @@ const SettingScreen = () => {
               <Pressable
                 onPress={() => setShowLogoutModal(false)}
                 disabled={isLoggingOut}
-                className="flex-1 py-3 rounded-xl bg-gray-light items-center"
+                className="flex-1 py-3 rounded-xl bg-gray-light items-center active:opacity-80"
               >
                 <Text className="text-body1 font-medium text-text-primary">
                   Cancel
@@ -187,10 +265,60 @@ const SettingScreen = () => {
               <Pressable
                 onPress={handleLogout}
                 disabled={isLoggingOut}
-                className={`flex-1 py-3 rounded-xl items-center ${isLoggingOut ? "bg-primary-light" : "bg-primary-main"}`}
+                className={`flex-1 py-3 rounded-xl items-center active:opacity-80 ${
+                  isLoggingOut ? "bg-primary-light" : "bg-primary-main"
+                }`}
               >
                 <Text className="text-body1 font-semibold text-white">
                   {isLoggingOut ? "Logging out..." : "Logout"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Delete Account Modal - Mandatory for Apple App Store & Google Play */}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={showDeleteModal}
+        onRequestClose={() => !isDeleting && setShowDeleteModal(false)}
+      >
+        <View className="flex-1 bg-black/60 items-center justify-center px-6">
+          <View className="bg-white w-full rounded-2xl p-6 items-center shadow-xl">
+            <View className="w-14 h-14 rounded-full bg-red-100 items-center justify-center mb-4">
+              <Ionicons name="trash-outline" size={26} color="#DC2626" />
+            </View>
+
+            <Text className="text-xl font-bold text-gray-900 mb-2">
+              Delete Account
+            </Text>
+
+            <Text className="text-sm text-gray-600 text-center mb-6 leading-5">
+              Are you sure you want to delete your account? All your applications, licenses, uploaded documents, chat history, and personal data will be permanently deleted. This action cannot be undone.
+            </Text>
+
+            <View className="flex-col gap-2.5 w-full">
+              <Pressable
+                onPress={handleDeleteAccount}
+                disabled={isDeleting}
+                className={`w-full py-3.5 rounded-xl items-center active:opacity-90 ${
+                  isDeleting ? "bg-red-400" : "bg-red-600"
+                }`}
+              >
+                <Text className="text-base font-bold text-white">
+                  {isDeleting ? "Deleting Account..." : "Yes, Permanently Delete"}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+                className="w-full py-3.5 rounded-xl bg-gray-100 items-center active:opacity-80"
+              >
+                <Text className="text-base font-semibold text-gray-700">
+                  Cancel
                 </Text>
               </Pressable>
             </View>
