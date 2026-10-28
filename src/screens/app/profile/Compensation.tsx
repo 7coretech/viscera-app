@@ -136,9 +136,11 @@ const Compensation = () => {
     } catch (error: any) {
       console.log("Error saving compensation:", error);
       toast.error(
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to save compensation."
+        typeof error === "string"
+          ? error
+          : error.response?.data?.message ||
+            error.message ||
+            "Failed to save compensation."
       );
     }
   };

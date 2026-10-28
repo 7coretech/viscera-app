@@ -130,7 +130,13 @@ const Preference: React.FC = () => {
       }
     } catch (error: any) {
       console.log('Error saving preferences:', error);
-      toast.error(error.response?.data?.message || error.message || "Failed to save preferences.");
+      toast.error(
+        typeof error === "string"
+          ? error
+          : error.response?.data?.message ||
+            error.message ||
+            "Failed to save preferences."
+      );
     }
   };
 

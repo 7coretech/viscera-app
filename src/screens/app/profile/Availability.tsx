@@ -95,9 +95,11 @@ const Availability = () => {
     } catch (error: any) {
       console.log("Error saving availability:", error);
       toast.error(
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to save availability."
+        typeof error === "string"
+          ? error
+          : error.response?.data?.message ||
+            error.message ||
+            "Failed to save availability."
       );
     }
   };

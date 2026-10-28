@@ -159,12 +159,17 @@ const TravelPreference = () => {
         });
         setHasExistingData(true);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log("Error saving travel preferences:", error);
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: typeof error === "string" ? error : "Failed to save travel preferences",
+        text2:
+          typeof error === "string"
+            ? error
+            : error?.response?.data?.message ||
+              error?.message ||
+              "Failed to save travel preferences",
       });
     } finally {
       setSaving(false);
