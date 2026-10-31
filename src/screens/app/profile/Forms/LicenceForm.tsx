@@ -7,12 +7,15 @@ import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import React, { useState } from "react";
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface LicenceFormProps {
   visible: boolean;
@@ -54,6 +57,7 @@ const specialtyOptions = [
 ];
 
 const LicenceForm = ({ visible, onClose, onSubmit, initialData }: LicenceFormProps) => {
+  const insets = useSafeAreaInsets();
   const [licenseType, setLicenseType] = useState("");
   const [states, setStates] = useState<string[]>([]);
   const [licenseNumber, setLicenseNumber] = useState("");
@@ -113,15 +117,26 @@ const LicenceForm = ({ visible, onClose, onSubmit, initialData }: LicenceFormPro
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View className="flex-1 justify-end bg-black/40">
-        <View className="bg-white rounded-t-xl p-4 max-h-[90%]">
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-h3 font-semibold">Add License Details</Text>
-              <TouchableOpacity onPress={onClose}>
-                <Ionicons name="close-circle-outline" size={22} />
-              </TouchableOpacity>
-            </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <View className="flex-1 justify-end bg-black/40">
+          <View
+            className="bg-white rounded-t-2xl p-4 max-h-[90%]"
+            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+          >
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{ paddingBottom: 60 }}
+            >
+              <View className="flex-row justify-between items-center mb-4">
+                <Text className="text-h3 font-semibold">Add License Details</Text>
+                <TouchableOpacity onPress={onClose}>
+                  <Ionicons name="close-circle-outline" size={22} />
+                </TouchableOpacity>
+              </View>
 
             <View className="mb-4">
               <FormLabel>Nursing License Type</FormLabel>
@@ -199,7 +214,8 @@ const LicenceForm = ({ visible, onClose, onSubmit, initialData }: LicenceFormPro
           </ScrollView>
         </View>
       </View>
-    </Modal>
+    </KeyboardAvoidingView>
+  </Modal>
   );
 };
 

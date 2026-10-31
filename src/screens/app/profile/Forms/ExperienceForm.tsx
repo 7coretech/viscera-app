@@ -6,12 +6,15 @@ import SelectComponent from "@/src/components/SelectComponent";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface ExperienceFormProps {
   visible: boolean;
@@ -47,6 +50,7 @@ const yesNoOptions = [
 ];
 
 const ExperienceForm = ({ visible, onClose, onSubmit, initialData }: ExperienceFormProps) => {
+  const insets = useSafeAreaInsets();
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
 
@@ -107,17 +111,28 @@ const ExperienceForm = ({ visible, onClose, onSubmit, initialData }: ExperienceF
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View className="flex-1 justify-end bg-black/40">
-        <View className="bg-white rounded-t-xl p-4 max-h-[90%]">
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-h3 font-semibold text-text-primary">
-                {initialData ? "Edit Experience" : "Add Experience"}
-              </Text>
-              <TouchableOpacity onPress={onClose}>
-                <Ionicons name="close-circle-outline" size={22} />
-              </TouchableOpacity>
-            </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <View className="flex-1 justify-end bg-black/40">
+          <View
+            className="bg-white rounded-t-2xl p-4 max-h-[90%]"
+            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+          >
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{ paddingBottom: 60 }}
+            >
+              <View className="flex-row justify-between items-center mb-4">
+                <Text className="text-h3 font-semibold text-text-primary">
+                  {initialData ? "Edit Experience" : "Add Experience"}
+                </Text>
+                <TouchableOpacity onPress={onClose}>
+                  <Ionicons name="close-circle-outline" size={22} />
+                </TouchableOpacity>
+              </View>
 
             <View className="mb-4">
               <FormLabel>Start Date</FormLabel>
@@ -220,7 +235,8 @@ const ExperienceForm = ({ visible, onClose, onSubmit, initialData }: ExperienceF
           </ScrollView>
         </View>
       </View>
-    </Modal>
+    </KeyboardAvoidingView>
+  </Modal>
   );
 };
 

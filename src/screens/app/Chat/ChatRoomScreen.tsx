@@ -322,7 +322,7 @@ const ChatRoomScreen = () => {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <SafeAreaView className="flex-1 bg-[#F9FAFB]" edges={["top"]}>
+      <SafeAreaView className="flex-1 bg-[#F9FAFB]" edges={["top", "bottom"]}>
         {/* Header */}
         <View className="w-full flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
           <TouchableOpacity

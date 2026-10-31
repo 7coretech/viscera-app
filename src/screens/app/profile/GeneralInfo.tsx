@@ -9,12 +9,21 @@ import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Image, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { cleanProfileImageUrl } from "@/src/utils/imageUtils";
 
 const GeneralInfo = () => {
+  const insets = useSafeAreaInsets();
   const theme = useTheme();
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
@@ -217,26 +226,31 @@ const GeneralInfo = () => {
   ];
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-white w-full">
-      <View className="flex-row items-center gap-4 px-4 py-3 border-b border-gray-light">
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons
-            name="arrow-back"
-            size={22}
-            color={theme.palette.gery.darkGray}
-          />
-        </TouchableOpacity>
-
-        <Text className="text-h2 font-semibold text-text-primary">
-          General Information
-        </Text>
-      </View>
-
-      <ScrollView
-        className="px-4 pt-6"
-        contentContainerStyle={{ paddingBottom: 140 }}
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView className="flex-1 bg-gray-white w-full" edges={["top"]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
       >
+        <View className="flex-row items-center gap-4 px-4 py-3 border-b border-gray-light">
+          <TouchableOpacity onPress={() => router.back()}>
+            <Ionicons
+              name="arrow-back"
+              size={22}
+              color={theme.palette.gery.darkGray}
+            />
+          </TouchableOpacity>
+
+          <Text className="text-h2 font-semibold text-text-primary">
+            General Information
+          </Text>
+        </View>
+
+        <ScrollView
+          className="px-4 pt-6"
+          contentContainerStyle={{ paddingBottom: 24 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
         <View className="items-center mb-6">
           <View className="relative">
             {profileImage && !imageError ? (
@@ -325,14 +339,18 @@ const GeneralInfo = () => {
 
       </ScrollView>
 
-      <View className="px-4 pb-2 mt-auto">
+      <View
+        className="px-4 pt-2 mt-auto bg-gray-white border-t border-gray-light"
+        style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+      >
         <ButtonComponent
           title="Save Changes"
           onPress={handleSave}
           loading={loading}
         />
       </View>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
+  </SafeAreaView>
   );
 };
 

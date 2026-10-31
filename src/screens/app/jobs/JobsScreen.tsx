@@ -196,7 +196,9 @@ const JobsScreen = () => {
           <Ionicons name="search" size={18} color="#4D4D4D" />
           <TextInput
             placeholder="Search job title, keyword..."
-            placeholderTextColor="#4D4D4D"
+            placeholderTextColor="#6B7280"
+            selectionColor="#0141C5"
+            style={{ color: "#111827", fontSize: 14 }}
             className="flex-1 ml-2 text-body1 text-text-primary"
             value={searchQuery}
             onChangeText={setSearchQuery}

@@ -7,12 +7,15 @@ import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from 'expo-document-picker';
 import React, { useState } from "react";
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
   View
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 
 interface VaccinationFormProps {
@@ -22,6 +25,7 @@ interface VaccinationFormProps {
 }
 
 const VaccinationForm = ({ visible, onClose, onSubmit }: VaccinationFormProps) => {
+  const insets = useSafeAreaInsets();
   const [vaccinated, setVaccinated] = useState<string>("no");
   const [vaccineName, setVaccineName] = useState<string>("");
   const [dose, setDose] = useState<string>("");
@@ -49,15 +53,26 @@ const handleUpload = async () => {
   };
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View className="flex-1 justify-end bg-black/40">
-        <View className="bg-white rounded-t-xl p-4 max-h-[90%]">
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <View className="flex-grow justify-between flex-row">
-            <Text className="text-h3 font-semibold mb-4">Add Vaccination Details</Text>
-            <TouchableOpacity onPress={onClose}>
-            <Ionicons name="close-circle-outline" size={20} />
-            </TouchableOpacity>
-            </View>           
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <View className="flex-1 justify-end bg-black/40">
+          <View
+            className="bg-white rounded-t-2xl p-4 max-h-[90%]"
+            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+          >
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{ paddingBottom: 60 }}
+            >
+              <View className="flex-grow justify-between flex-row">
+                <Text className="text-h3 font-semibold mb-4">Add Vaccination Details</Text>
+                <TouchableOpacity onPress={onClose}>
+                  <Ionicons name="close-circle-outline" size={20} />
+                </TouchableOpacity>
+              </View>           
             <View className="mb-4">
               <FormLabel>Are you vaccinated?</FormLabel>
               <SelectComponent
@@ -128,7 +143,8 @@ const handleUpload = async () => {
           </ScrollView>
         </View>
       </View>
-    </Modal>
+    </KeyboardAvoidingView>
+  </Modal>
   );
 };
 

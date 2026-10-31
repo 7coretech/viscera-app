@@ -16,6 +16,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { appService } from "@/src/services/appApi/appService";
 import { useTheme } from "@/src/theme";
 import toast from "@/src/utils/toast";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface ApplyJobModalProps {
   visible: boolean;
@@ -30,6 +31,7 @@ const ApplyJobModal: React.FC<ApplyJobModalProps> = ({
   job,
   onSuccess,
 }) => {
+  const insets = useSafeAreaInsets();
   const theme = useTheme();
 
   const [loading, setLoading] = useState(false);
@@ -200,11 +202,14 @@ const ApplyJobModal: React.FC<ApplyJobModalProps> = ({
       onRequestClose={onClose}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="bg-white rounded-t-3xl max-h-[85%] w-full">
+          <View
+            className="bg-white rounded-t-3xl max-h-[85%] w-full"
+            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+          >
             {/* Header */}
             <View className="flex-row items-center justify-between p-4 border-b border-gray-light">
               <View className="flex-1 pr-2">
@@ -444,10 +449,12 @@ const ApplyJobModal: React.FC<ApplyJobModalProps> = ({
                     value={coverLetter}
                     onChangeText={setCoverLetter}
                     placeholder="Introduce yourself, mention your clinical availability and why you're a great fit..."
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#6B7280"
+                    selectionColor="#0141C5"
                     multiline={true}
                     numberOfLines={4}
                     textAlignVertical="top"
+                    style={{ color: "#111827", fontSize: 14 }}
                     className="p-3 bg-white border border-gray-light rounded-xl text-body2 text-text-primary min-h-[90px]"
                   />
                 </View>

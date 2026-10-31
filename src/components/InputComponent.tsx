@@ -99,12 +99,14 @@ onRightIconPress,
                         value={value}
                         onChangeText={onChangeText}
                         placeholder={placeholder}
-                        placeholderTextColor="#4D4D4D"
+                        placeholderTextColor="#6B7280"
+                        selectionColor="#0141C5"
                         secureTextEntry={isPassword && !showPassword}
                         editable={editable && !loading}
                         multiline={multiline}
                         textAlignVertical={multiline ? "top" : "center"}
                         className="flex-1 text-gray-black font-inter text-small"
+                        style={[{ color: "#111827", fontSize: 14 }, rest.style]}
                         onFocus={() => setFocused(true)}
                         onBlur={() => setFocused(false)}
                         {...rest}

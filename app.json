@@ -35,7 +35,12 @@
         "VIBRATE",
         "RECEIVE_BOOT_COMPLETED"
       ],
-      "edgeToEdgeEnabled": true,
+      "edgeToEdgeEnabled": false,
+      "androidNavigationBar": {
+        "visible": "always",
+        "backgroundColor": "#ffffff",
+        "barStyle": "dark-content"
+      },
       "predictiveBackGestureEnabled": false,
       "package": "com.viscera.app"
     },

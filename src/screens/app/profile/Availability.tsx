@@ -9,16 +9,19 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
   View
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const daysAbbr = ["M", "T", "W", "T", "F", "S", "S"];
 
 const Availability = () => {
+  const insets = useSafeAreaInsets();
   const theme = useTheme();
   const router = useRouter();
 
@@ -113,26 +116,31 @@ const Availability = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-white">
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-gray-light">
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons
-            name="arrow-back"
-            size={22}
-            color={theme.palette.gery.darkGray}
-          />
-        </TouchableOpacity>
-
-        <Text className="text-h2 font-semibold text-text-primary ml-4">
-          Availability
-        </Text>
-      </View>
-      <ScrollView
-        className="px-4"
-        contentContainerStyle={{ paddingBottom: 140 }}
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView className="flex-1 bg-gray-white" edges={["top"]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
       >
+        {/* Header */}
+        <View className="flex-row items-center px-4 py-3 border-b border-gray-light">
+          <TouchableOpacity onPress={() => router.back()}>
+            <Ionicons
+              name="arrow-back"
+              size={22}
+              color={theme.palette.gery.darkGray}
+            />
+          </TouchableOpacity>
+
+          <Text className="text-h2 font-semibold text-text-primary ml-4">
+            Availability
+          </Text>
+        </View>
+        <ScrollView
+          className="px-4"
+          contentContainerStyle={{ paddingBottom: 24 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
         <View className="mt-6">
           <FormLabel>
             Available From
@@ -226,14 +234,17 @@ const Availability = () => {
         </View>
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 p-2 bg-gray-white border-t border-gray-light">
+      <View
+        className="px-4 pt-2 bg-gray-white border-t border-gray-light"
+        style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+      >
         <ButtonComponent
           title="Save Availability"
           onPress={handleSave}
         />
-
       </View>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
+  </SafeAreaView>
   );
 };
 

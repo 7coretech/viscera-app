@@ -7,13 +7,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   Switch,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const travelOptions = ["Travel Nurse", "Stationary Nurse", "Hybrid"];
 const stateOptions = ["Gujarat", "Maharashtra", "Goa"];
@@ -35,6 +37,7 @@ const humanitarianRolesOptions = [
 ];
 
 const Preference: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const theme = useTheme();
   const router = useRouter();
 
@@ -141,24 +144,29 @@ const Preference: React.FC = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-white">
-      <View className="flex-row items-center px-4 py-3 border-b border-gray-light">
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons
-            name="arrow-back"
-            size={22}
-            color={theme.palette.gery.darkGray}
-          />
-        </TouchableOpacity>
-        <Text className="text-h2 font-semibold ml-4 text-text-primary">
-          My Preferences
-        </Text>
-      </View>
-
-      <ScrollView
-        className="px-4"
-        contentContainerStyle={{ paddingBottom: 120 }}
+    <SafeAreaView className="flex-1 bg-gray-white" edges={["top"]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
       >
+        <View className="flex-row items-center px-4 py-3 border-b border-gray-light">
+          <TouchableOpacity onPress={() => router.back()}>
+            <Ionicons
+              name="arrow-back"
+              size={22}
+              color={theme.palette.gery.darkGray}
+            />
+          </TouchableOpacity>
+          <Text className="text-h2 font-semibold ml-4 text-text-primary">
+            My Preferences
+          </Text>
+        </View>
+
+        <ScrollView
+          className="px-4"
+          contentContainerStyle={{ paddingBottom: 24 }}
+          keyboardShouldPersistTaps="handled"
+        >
         <View className="flex-row justify-between items-center mt-4 mb-2">
           <Text className="text-h4 font-medium text-text-primary">
             Willingness to Relocate
@@ -344,10 +352,14 @@ const Preference: React.FC = () => {
         )}
       </ScrollView>
 
-      <View className="px-4 pb-2 mt-auto">
+      <View
+        className="px-4 pt-2 mt-auto bg-gray-white border-t border-gray-light"
+        style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+      >
         <ButtonComponent title="Save Preferences" onPress={handleSave} />
       </View>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
+  </SafeAreaView>
   );
 };
 

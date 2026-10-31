@@ -6,13 +6,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const clinicalSkillOptions = [
   "ICU",
@@ -54,6 +56,7 @@ const softSkillOptions = [
 ];
 
 const Skills = () => {
+  const insets = useSafeAreaInsets();
   const theme = useTheme();
   const router = useRouter();
 
@@ -195,7 +198,9 @@ const Skills = () => {
             value={input}
             onChangeText={setInput}
             placeholder="Type to search or add..."
-            placeholderTextColor="#999"
+            placeholderTextColor="#6B7280"
+            selectionColor="#0141C5"
+            style={{ color: "#111827", fontSize: 14 }}
             className="px-4 py-3 text-body1 text-text-primary bg-white rounded-lg border border-gray-light"
             onSubmitEditing={() =>
               addSkill(input, skills, setSkills, setInput, setShowOptions)
@@ -244,29 +249,34 @@ const Skills = () => {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-white w-full">
-      <View className="flex-row items-center px-4 py-3 border-b border-gray-light">
-        <TouchableOpacity
-          onPress={() => {
-            router.push("/app/(tabs)/profile");
-          }}
-        >
-          <Ionicons
-            name="arrow-back"
-            size={22}
-            color={theme.palette.gery.darkGray}
-          />
-        </TouchableOpacity>
-
-        <Text className="text-h2 font-semibold text-text-primary ml-4">
-          Skills
-        </Text>
-      </View>
-
-      <ScrollView
-        className="flex-1 px-4"
-        contentContainerStyle={{ paddingBottom: 120, paddingTop: 16 }}
+    <SafeAreaView className="flex-1 bg-gray-white w-full" edges={["top"]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
       >
+        <View className="flex-row items-center px-4 py-3 border-b border-gray-light">
+          <TouchableOpacity
+            onPress={() => {
+              router.push("/app/(tabs)/profile");
+            }}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={22}
+              color={theme.palette.gery.darkGray}
+            />
+          </TouchableOpacity>
+
+          <Text className="text-h2 font-semibold text-text-primary ml-4">
+            Skills
+          </Text>
+        </View>
+
+        <ScrollView
+          className="flex-1 px-4"
+          contentContainerStyle={{ paddingBottom: 24, paddingTop: 16 }}
+          keyboardShouldPersistTaps="handled"
+        >
         {renderSkillSection(
           "Clinical Skills",
           "medkit",
@@ -313,13 +323,17 @@ const Skills = () => {
         )}
       </ScrollView>
 
-      <View className="px-4 pb-2 mt-auto">
+      <View
+        className="px-4 pt-2 mt-auto bg-gray-white border-t border-gray-light"
+        style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+      >
         <ButtonComponent
           title="Save Skills"
           onPress={handleSave}
         />
       </View>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
+  </SafeAreaView>
   );
 };
 

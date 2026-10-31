@@ -389,6 +389,8 @@ const ForgotPasswordScreen = () => {
                         ref={(ref) => {
                           if (ref) inputsRef.current[index] = ref;
                         }}
+                        style={{ color: digit ? "#0141C5" : "#111827", fontSize: 22, fontWeight: "bold" }}
+                        selectionColor="#0141C5"
                         className={`w-11 h-13 border-2 rounded-xl text-center text-h2 font-bold bg-gray-50/80 shadow-xs ${
                           otpError
                             ? "border-red-500 text-red-500 bg-red-50/20"

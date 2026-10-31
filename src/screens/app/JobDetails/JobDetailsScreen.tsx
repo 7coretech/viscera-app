@@ -8,10 +8,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSelector } from "react-redux";
 
 const JobDetailsScreen = () => {
+  const insets = useSafeAreaInsets();
   const route = useRouter();
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
   const [job, setJob] = useState<any>(null);
@@ -269,7 +270,10 @@ const JobDetailsScreen = () => {
         )}
       </ScrollView>
 
-      <View className="px-4 pb-6 mt-auto bg-white pt-4">
+      <View
+        className="px-4 pt-3 mt-auto bg-white border-t border-gray-light"
+        style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+      >
         <View className="flex-row gap-3">
           <TouchableOpacity
             disabled={chatLoading}

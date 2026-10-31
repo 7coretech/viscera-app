@@ -9,12 +9,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const salaryTypeOptions = [
   { label: "Annual Salary", value: "Annual Salary" },
@@ -41,6 +43,7 @@ const preferredBenefits = [
 ];
 
 const Compensation = () => {
+  const insets = useSafeAreaInsets();
   const theme = useTheme();
   const router = useRouter();
 
@@ -146,29 +149,34 @@ const Compensation = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-white w-full">
-      <View className="flex-row items-center px-4 py-3 border-b border-gray-light">
-        <TouchableOpacity
-          onPress={() => {
-            router.push("/app/(tabs)/profile");
-          }}
-        >
-          <Ionicons
-            name="arrow-back"
-            size={22}
-            color={theme.palette.gery.darkGray}
-          />
-        </TouchableOpacity>
-
-        <Text className="text-h2 font-semibold text-text-primary ml-4">
-          Compensation
-        </Text>
-      </View>
-
-      <ScrollView
-        className="flex-1 px-4"
-        contentContainerStyle={{ paddingBottom: 120, paddingTop: 16 }}
+    <SafeAreaView className="flex-1 bg-gray-white w-full" edges={["top"]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
       >
+        <View className="flex-row items-center px-4 py-3 border-b border-gray-light">
+          <TouchableOpacity
+            onPress={() => {
+              router.push("/app/(tabs)/profile");
+            }}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={22}
+              color={theme.palette.gery.darkGray}
+            />
+          </TouchableOpacity>
+
+          <Text className="text-h2 font-semibold text-text-primary ml-4">
+            Compensation
+          </Text>
+        </View>
+
+        <ScrollView
+          className="flex-1 px-4"
+          contentContainerStyle={{ paddingBottom: 24, paddingTop: 16 }}
+          keyboardShouldPersistTaps="handled"
+        >
 
         <View className="mb-4">
           <FormLabel>Salary Type</FormLabel>
@@ -332,13 +340,17 @@ const Compensation = () => {
         </View>
       </ScrollView>
 
-      <View className="px-4 pb-2 mt-auto">
+      <View
+        className="px-4 pt-2 mt-auto bg-gray-white border-t border-gray-light"
+        style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+      >
         <ButtonComponent
           title="Save Compensation"
           onPress={handleSave}
         />
       </View>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
+  </SafeAreaView>
   );
 };
 

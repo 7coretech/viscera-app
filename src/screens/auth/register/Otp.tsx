@@ -127,6 +127,8 @@ const Otp: React.FC<Props> = ({ mobile, email, onNext }) => {
               onBlur={() => setFocusedIndex(null)}
               onKeyPress={(e) => handleKeyPress(e, i)}
               editable={!loading}
+              selectionColor="#0141C5"
+              style={{ color: "#0141C5", fontSize: 20, fontWeight: "bold" }}
               className={`w-12 h-12 text-center text-h2 border rounded-xl ${isFocused ? "border-primary-main border-2" : (errorVisible ? "border-red-500" : "border-gray-medium")
                 }`}
             />
