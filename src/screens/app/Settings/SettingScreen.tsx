@@ -4,11 +4,10 @@ import { logoutUser } from "@/src/store/authSlice";
 import { toast } from "@/src/utils/toast";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
-  Linking,
   Modal,
   Pressable,
   Text,
@@ -17,86 +16,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const settingsData = [
-  {
-    id: "1",
-    title: "Notification Settings",
-    icon: "notifications",
-    bg: "bg-primary-light1",
-    iconColor: "#0141C5",
-    showArrow: true,
-    route: "/app/Settings/notificationSettings",
-  },
-  {
-    id: "2",
-    title: "Privacy Settings",
-    icon: "lock-closed",
-    bg: "bg-actionLight-purple1",
-    iconColor: "#780078",
-    showArrow: true,
-    route: "/app/Settings/privacy",
-  },
-  {
-    id: "3",
-    title: "Change Password",
-    icon: "key",
-    bg: "bg-secondary-light1",
-    iconColor: "#3ACBE8",
-    showArrow: true,
-    route: "/app/Settings/changePassword",
-  },
-  {
-    id: "4",
-    title: "Time Zone",
-    icon: "globe",
-    bg: "bg-actionLight-green",
-    iconColor: "#006900",
-    value: "PST",
-    showArrow: false,
-    route: "/app/Settings/timeZone",
-  },
-  {
-    id: "5",
-    title: "Privacy Policy",
-    icon: "shield-checkmark-outline",
-    bg: "bg-blue-50",
-    iconColor: "#0141C5",
-    showArrow: true,
-    action: "privacy_policy",
-  },
-  {
-    id: "6",
-    title: "Terms of Service",
-    icon: "document-text-outline",
-    bg: "bg-blue-50",
-    iconColor: "#0141C5",
-    showArrow: true,
-    action: "terms_of_service",
-  },
-  {
-    id: "7",
-    title: "Logout",
-    icon: "log-out-outline",
-    bg: "bg-actionLight-red",
-    iconColor: "#963939",
-    textColor: "text-action-red",
-    arrowColor: "#963939",
-    showArrow: true,
-    action: "logout",
-  },
-  {
-    id: "8",
-    title: "Delete Account",
-    icon: "trash-outline",
-    bg: "bg-red-50",
-    iconColor: "#DC2626",
-    textColor: "text-red-600",
-    arrowColor: "#DC2626",
-    showArrow: true,
-    action: "delete_account",
-  },
-];
-
 const SettingScreen = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -104,6 +23,137 @@ const SettingScreen = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [currentTimezone, setCurrentTimezone] = useState("PST");
+
+  // Load timezone whenever the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+      const loadTimezone = async () => {
+        try {
+          const stored = await AsyncStorage.getItem("user_timezone");
+          if (stored) {
+            try {
+              const parsed = JSON.parse(stored);
+              if (parsed?.code && isMounted) {
+                setCurrentTimezone(parsed.code);
+                return;
+              }
+            } catch {
+              if (isMounted) {
+                setCurrentTimezone(stored);
+                return;
+              }
+            }
+          }
+          // Detect device timezone fallback
+          const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+          if (deviceTz.includes("Calcutta") || deviceTz.includes("Kolkata")) {
+            if (isMounted) setCurrentTimezone("IST");
+          } else if (deviceTz.includes("New_York")) {
+            if (isMounted) setCurrentTimezone("EST");
+          } else if (deviceTz.includes("Chicago")) {
+            if (isMounted) setCurrentTimezone("CST");
+          } else if (deviceTz.includes("Denver")) {
+            if (isMounted) setCurrentTimezone("MST");
+          } else if (deviceTz.includes("Los_Angeles")) {
+            if (isMounted) setCurrentTimezone("PST");
+          } else {
+            if (isMounted) setCurrentTimezone("PST");
+          }
+        } catch (e) {
+          console.log("Error loading timezone in Settings:", e);
+        }
+      };
+      loadTimezone();
+      return () => {
+        isMounted = false;
+      };
+    }, [])
+  );
+
+  const settingsData = useMemo(
+    () => [
+      {
+        id: "1",
+        title: "Notification Settings",
+        icon: "notifications",
+        bg: "bg-primary-light1",
+        iconColor: "#0141C5",
+        showArrow: true,
+        route: "/app/Settings/notificationSettings",
+      },
+      {
+        id: "2",
+        title: "Privacy Settings",
+        icon: "lock-closed",
+        bg: "bg-actionLight-purple1",
+        iconColor: "#780078",
+        showArrow: true,
+        route: "/app/Settings/privacy",
+      },
+      {
+        id: "3",
+        title: "Change Password",
+        icon: "key",
+        bg: "bg-secondary-light1",
+        iconColor: "#3ACBE8",
+        showArrow: true,
+        route: "/app/Settings/changePassword",
+      },
+      {
+        id: "4",
+        title: "Time Zone",
+        icon: "globe",
+        bg: "bg-actionLight-green",
+        iconColor: "#006900",
+        value: currentTimezone,
+        showArrow: true,
+        route: "/app/Settings/timeZone",
+      },
+      {
+        id: "5",
+        title: "Privacy Policy",
+        icon: "shield-checkmark-outline",
+        bg: "bg-blue-50",
+        iconColor: "#0141C5",
+        showArrow: true,
+        route: "/app/Settings/privacyPolicy",
+      },
+      {
+        id: "6",
+        title: "Terms of Service",
+        icon: "document-text-outline",
+        bg: "bg-blue-50",
+        iconColor: "#0141C5",
+        showArrow: true,
+        route: "/app/Settings/termsOfService",
+      },
+      {
+        id: "7",
+        title: "Logout",
+        icon: "log-out-outline",
+        bg: "bg-actionLight-red",
+        iconColor: "#963939",
+        textColor: "text-action-red",
+        arrowColor: "#963939",
+        showArrow: true,
+        action: "logout",
+      },
+      {
+        id: "8",
+        title: "Delete Account",
+        icon: "trash-outline",
+        bg: "bg-red-50",
+        iconColor: "#DC2626",
+        textColor: "text-red-600",
+        arrowColor: "#DC2626",
+        showArrow: true,
+        action: "delete_account",
+      },
+    ],
+    [currentTimezone]
+  );
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -179,14 +229,6 @@ const SettingScreen = () => {
                 setShowLogoutModal(true);
               } else if (item.action === "delete_account") {
                 setShowDeleteModal(true);
-              } else if (item.action === "privacy_policy") {
-                Linking.openURL("https://app.visceraconnect.com/privacy").catch(() => {
-                  toast.error("Unable to open browser");
-                });
-              } else if (item.action === "terms_of_service") {
-                Linking.openURL("https://app.visceraconnect.com/terms").catch(() => {
-                  toast.error("Unable to open browser");
-                });
               } else if (item.route) {
                 router.push(item.route as any);
               }
@@ -214,7 +256,7 @@ const SettingScreen = () => {
 
             <View className="flex-row items-center gap-2">
               {item.value && (
-                <Text className="text-body2 text-text-secondary">
+                <Text className="text-body2 text-text-secondary font-medium">
                   {item.value}
                 </Text>
               )}
@@ -278,7 +320,7 @@ const SettingScreen = () => {
         </View>
       </Modal>
 
-      {/* Delete Account Modal - Mandatory for Apple App Store & Google Play */}
+      {/* Delete Account Modal */}
       <Modal
         transparent
         animationType="fade"

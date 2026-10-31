@@ -15,4 +15,5 @@ export const APP_ENDPOINTS = {
     JOBS: '/api/v1/jobs',
     APPLICANT: '/api/v1/applicant',
     APPLY: '/api/v1/applicant/apply',
+    UPDATE_PASSWORD: '/api/v1/users/update-password',
 };

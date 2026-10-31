@@ -146,6 +146,8 @@ export const appService = {
     markNotificationAsRead: (id: string) => apiClient.put(`/api/v1/notifications/${id}/read`),
     deleteNotification: (id: string) => apiClient.delete(`/api/v1/notifications/${id}`),
     deleteAccount: () => apiClient.delete('/api/v1/users/account'),
+    updatePassword: (data: { oldPassword: string; newPassword: string }) =>
+        apiClient.put(APP_ENDPOINTS.UPDATE_PASSWORD, data),
 };
 
 export default {
