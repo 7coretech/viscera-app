@@ -204,3 +204,4 @@ const TermsOfServiceScreen = () => {
 };
 
 export default TermsOfServiceScreen;
+

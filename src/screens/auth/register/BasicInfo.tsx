@@ -191,14 +191,14 @@ const BasicInfo: React.FC<Props> = ({ onNext, defaultValues }) => {
           By creating an account, you agree to our{" "}
           <Text
             className="text-primary-main font-semibold"
-            onPress={() => Linking.openURL("https://app.visceraconnect.com/terms")}
+            onPress={() => router.push("/app/Settings/termsOfService" as any)}
           >
             Terms of Service
           </Text>{" "}
           and{" "}
           <Text
             className="text-primary-main font-semibold"
-            onPress={() => Linking.openURL("https://app.visceraconnect.com/privacy")}
+            onPress={() => router.push("/app/Settings/privacyPolicy" as any)}
           >
             Privacy Policy
           </Text>

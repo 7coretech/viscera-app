@@ -314,15 +314,15 @@ const ProfileScreen = () => {
           {/* Quick Legal & Settings Links */}
           <View className="mt-4 pt-4 border-t border-gray-200/60 items-center">
             <View className="flex-row items-center gap-4 mb-2">
-              <TouchableOpacity onPress={() => router.push("/app/Settings")}>
+              <TouchableOpacity onPress={() => router.push("/app/Settings" as any)}>
                 <Text className="text-xs font-semibold text-primary-main">Settings</Text>
               </TouchableOpacity>
               <Text className="text-gray-300">•</Text>
-              <TouchableOpacity onPress={() => Linking.openURL("https://app.visceraconnect.com/privacy")}>
+              <TouchableOpacity onPress={() => router.push("/app/Settings/privacyPolicy" as any)}>
                 <Text className="text-xs font-semibold text-primary-main">Privacy Policy</Text>
               </TouchableOpacity>
               <Text className="text-gray-300">•</Text>
-              <TouchableOpacity onPress={() => Linking.openURL("https://app.visceraconnect.com/terms")}>
+              <TouchableOpacity onPress={() => router.push("/app/Settings/termsOfService" as any)}>
                 <Text className="text-xs font-semibold text-primary-main">Terms</Text>
               </TouchableOpacity>
             </View>
