@@ -54,6 +54,11 @@ const JobsScreen = () => {
   }, [activeTab, accessToken]);
 
   const filteredJobs = jobs.filter((job) => {
+    const jobId = job.id || job._id || job.jobId;
+    // Industry standard: In Recommended feed, hide jobs already applied to
+    if (activeTab === "Recommended" && appliedJobs.includes(jobId)) {
+      return false;
+    }
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     const title = job.title?.toLowerCase() || "";
@@ -84,14 +89,16 @@ const JobsScreen = () => {
       if (appliedRes.status === 'fulfilled' && appliedRes.value?.data) {
         const arr = appliedRes.value.data?.data || appliedRes.value.data;
         if (Array.isArray(arr)) {
-          setAppliedJobs(arr.map((item: any) => item.id || item.jobId));
+          const ids = arr.map((item: any) => item.id || item.jobId || item._id).filter(Boolean);
+          setAppliedJobs(ids);
         }
       }
 
       if (savedRes.status === 'fulfilled' && savedRes.value?.data) {
         const arr = savedRes.value.data?.data || savedRes.value.data;
         if (Array.isArray(arr)) {
-          setSavedJobs(arr.map((item: any) => item.id || item.jobId));
+          const ids = arr.map((item: any) => item.id || item.jobId || item._id).filter(Boolean);
+          setSavedJobs(ids);
         }
       }
     } catch (error) {
@@ -207,18 +214,20 @@ const JobsScreen = () => {
       </View>
 
       {/* Tabs */}
-      <View className="flex-row px-4 mt-4">
+      <View className="flex-row px-4 mt-4 gap-2">
         {TABS.map((tab) => {
           const isActive = activeTab === tab;
           return (
             <TouchableOpacity
               key={tab}
               onPress={() => setActiveTab(tab)}
-              className={`flex-1 py-2 mr-2 rounded-lg ${isActive ? "bg-primary-main" : "bg-gray-light"
+              activeOpacity={0.8}
+              className={`flex-1 py-2.5 px-1 rounded-xl items-center justify-center ${isActive ? "bg-primary-main shadow-sm" : "bg-gray-light"
                 }`}
             >
               <Text
-                className={`text-center font-semibold text-body2 ${isActive ? "text-gray-white" : "text-text-secondary"
+                numberOfLines={1}
+                className={`text-center font-semibold text-[13px] ${isActive ? "text-gray-white font-bold" : "text-text-secondary"
                   }`}
               >
                 {tab}
@@ -248,7 +257,8 @@ const JobsScreen = () => {
             console.log("Job Item Full:", JSON.stringify(item, null, 2));
             console.log("Resolved Job ID:", jobId);
 
-            const isApplied = appliedJobs.includes(jobId);
+            // In Applied tab, every job is already applied
+            const isApplied = activeTab === "Applied" || appliedJobs.includes(jobId);
             const isSaved = savedJobs.includes(jobId);
 
             return (
@@ -321,32 +331,31 @@ const JobsScreen = () => {
                     </Text>
                   </TouchableOpacity>
 
-                  {/* Apply Button */}
-                  <TouchableOpacity
-                    disabled={isApplied}
-                    onPress={() => handleApplyClick(item)}
-                  >
-                    <LinearGradient
-                      colors={
-                        isApplied
-                          ? ["#DBDBDB", "#DBDBDB"]
-                          : ["#0141C5", "#3ACBE8"]
-                      }
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={{
-                        borderRadius: 8,
-                      }} >
-                      <Text
-                        className={`text-body2 font-semibold text-center px-5 py-2 rounded-lg ${isApplied
-                          ? "text-text-secondary"
-                          : "text-gray-white"
-                          }`}
-                      >
-                        {isApplied ? "Applied" : "Apply"}
+                  {/* Apply / Applied Status Button */}
+                  {isApplied ? (
+                    <View className="flex-row items-center bg-actionLight-green/30 border border-action-green/30 px-4 py-2 rounded-lg">
+                      <Ionicons name="checkmark-circle" size={16} color="#10B981" style={{ marginRight: 4 }} />
+                      <Text className="text-body2 font-bold text-action-green">
+                        {item.applicationStatus ? String(item.applicationStatus).toUpperCase() : "Applied"}
                       </Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      onPress={() => handleApplyClick(item)}
+                      activeOpacity={0.8}
+                    >
+                      <LinearGradient
+                        colors={["#0141C5", "#3ACBE8"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={{ borderRadius: 8 }}
+                      >
+                        <Text className="text-body2 font-semibold text-center text-gray-white px-5 py-2">
+                          Apply
+                        </Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
             );

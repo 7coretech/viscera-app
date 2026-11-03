@@ -138,84 +138,84 @@ const LicenceForm = ({ visible, onClose, onSubmit, initialData }: LicenceFormPro
                 </TouchableOpacity>
               </View>
 
-            <View className="mb-4">
-              <FormLabel>Nursing License Type</FormLabel>
-              <SelectComponent
-                value={licenseType}
-                onChange={setLicenseType}
-                placeholder="Select license type"
-                options={nursingLicenseTypeOptions}
-              />
-            </View>
+              <View className="mb-4">
+                <FormLabel>Nursing License Type</FormLabel>
+                <SelectComponent
+                  value={licenseType}
+                  onChange={setLicenseType}
+                  placeholder="Select license type"
+                  options={nursingLicenseTypeOptions}
+                />
+              </View>
 
-            <View className="mb-4">
-              <FormLabel>License State(s)</FormLabel>
-              <SelectComponent
-                value={states}
-                onChange={setStates}
-                placeholder="Select state(s)"
-                options={stateOptions}
-                multiple
-              />
-            </View>
+              <View className="mb-4">
+                <FormLabel>License State(s)</FormLabel>
+                <SelectComponent
+                  value={states}
+                  onChange={setStates}
+                  placeholder="Select state(s)"
+                  options={stateOptions}
+                  multiple
+                />
+              </View>
 
-            <View className="mb-4">
-              <FormLabel>License Number</FormLabel>
-              <InputComponent
-                value={licenseNumber}
-                onChangeText={setLicenseNumber}
-                placeholder="Enter license number"
-              />
-            </View>
+              <View className="mb-4">
+                <FormLabel>License Number</FormLabel>
+                <InputComponent
+                  value={licenseNumber}
+                  onChangeText={setLicenseNumber}
+                  placeholder="Enter license number"
+                />
+              </View>
 
-            <View className="mb-4">
-              <FormLabel>Expiry Date</FormLabel>
-              <DatePickerComponent
-                value={expiryDate}
-                onChange={setExpiryDate}
-                placeholder="Select expiry date"
-              />
-            </View>
+              <View className="mb-4">
+                <FormLabel>Expiry Date</FormLabel>
+                <DatePickerComponent
+                  value={expiryDate}
+                  onChange={setExpiryDate}
+                  placeholder="Select expiry date"
+                />
+              </View>
 
-            <View className="mb-4">
-              <FormLabel>Multi-State License</FormLabel>
-              <SelectComponent
-                value={isMultiState}
-                onChange={setIsMultiState}
-                placeholder="Select"
-                options={yesNoOptions}
-              />
-            </View>
+              <View className="mb-4">
+                <FormLabel>Multi-State License</FormLabel>
+                <SelectComponent
+                  value={isMultiState}
+                  onChange={setIsMultiState}
+                  placeholder="Select"
+                  options={yesNoOptions}
+                />
+              </View>
 
-            <View className="mb-4">
-              <FormLabel>Specialty Certifications</FormLabel>
-              <SelectComponent
-                value={specialtyCertifications}
-                onChange={setSpecialtyCertifications}
-                placeholder="Select specialties"
-                options={specialtyOptions}
-                multiple
-              />
-            </View>
+              <View className="mb-4">
+                <FormLabel>Specialty Certifications</FormLabel>
+                <SelectComponent
+                  value={specialtyCertifications}
+                  onChange={setSpecialtyCertifications}
+                  placeholder="Select specialties"
+                  options={specialtyOptions}
+                  multiple
+                />
+              </View>
 
-            <View className="mb-4">
-              <FormLabel>Credential Upload (PDF/JPG)</FormLabel>
-              <InputComponent onPress={handleUpload} rightIconName="cloud-upload">
-                <Text className="ml-2">
-                  {credentialFile ? credentialFile.name : "Upload document"}
-                </Text>
-              </InputComponent>
-            </View>
+              <View className="mb-4">
+                <FormLabel>Credential Upload (PDF/JPG)</FormLabel>
+                <InputComponent onPress={handleUpload} rightIconName="cloud-upload">
+                  <Text className="ml-2">
+                    {credentialFile ? credentialFile.name : "Upload document"}
+                  </Text>
+                </InputComponent>
+              </View>
 
-            <View className="flex-row justify-end gap-3 mt-4">
-              <ButtonComponent title="Cancel" variant="outlined" onPress={onClose} />
-              <ButtonComponent title="Submit" onPress={handleSubmit} />
-            </View>
-          </ScrollView>
+              <View className="flex-row justify-end gap-3 mt-4">
+                <ButtonComponent title="Cancel" variant="outlined" onPress={onClose} />
+                <ButtonComponent title="Submit" onPress={handleSubmit} />
+              </View>
+            </ScrollView>
+          </View>
         </View>
-      </View>
-    </KeyboardAvoidingView>
-  </Modal>
+      </KeyboardAvoidingView>
+    </Modal>
   );
 };
 

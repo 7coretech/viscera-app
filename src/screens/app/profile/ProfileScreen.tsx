@@ -3,13 +3,21 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/src/store";
 import { Image, Linking, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { cleanProfileImageUrl } from "@/src/utils/imageUtils";
 
 const ProfileScreen = () => {
   const router = useRouter();
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const authUser = useSelector((state: RootState) => state.auth.user);
+  const [userProfile, setUserProfile] = useState<any>(authUser || null);
+  const [preferencesData, setPreferencesData] = useState<any>(null);
+  const [skillsData, setSkillsData] = useState<any>(null);
+  const [availabilityData, setAvailabilityData] = useState<any>(null);
+  const [compensationData, setCompensationData] = useState<any>(null);
+  const [travelData, setTravelData] = useState<any>(null);
   const [imageError, setImageError] = useState(false);
   const [completionScore, setCompletionScore] = useState<any>(null);
   const [licenseCount, setLicenseCount] = useState<number>(0);
@@ -25,15 +33,31 @@ const ProfileScreen = () => {
 
   const fetchProfileData = async () => {
     try {
-      const [profileRes, scoreRes, licenseRes, resumeRes, docRes, expRes] =
-        await Promise.allSettled([
-          appService.getUserProfile(),
-          appService.getCompletionScore(),
-          appService.getLicenses(),
-          appService.getResumes(),
-          appService.getDocuments(),
-          appService.getExperiences(),
-        ]);
+      const [
+        profileRes,
+        scoreRes,
+        licenseRes,
+        resumeRes,
+        docRes,
+        expRes,
+        prefRes,
+        skillsRes,
+        availRes,
+        compRes,
+        travelRes
+      ] = await Promise.allSettled([
+        appService.getUserProfile(),
+        appService.getCompletionScore(),
+        appService.getLicenses(),
+        appService.getResumes(),
+        appService.getDocuments(),
+        appService.getExperiences(),
+        appService.getPreferences(),
+        appService.getSkills(),
+        appService.getAvailability(),
+        appService.getCompensation(),
+        appService.getTravelPreferences(),
+      ]);
 
       if (profileRes.status === "fulfilled" && profileRes.value.data?.success) {
         setUserProfile(profileRes.value.data.data);
@@ -63,6 +87,26 @@ const ProfileScreen = () => {
         const d = expRes.value.data?.data || expRes.value.data || [];
         setExpCount(Array.isArray(d) ? d.length : 0);
       }
+
+      if (prefRes.status === "fulfilled" && prefRes.value.data?.data) {
+        setPreferencesData(prefRes.value.data.data);
+      }
+
+      if (skillsRes.status === "fulfilled" && skillsRes.value.data?.data) {
+        setSkillsData(skillsRes.value.data.data);
+      }
+
+      if (availRes.status === "fulfilled" && availRes.value.data?.data) {
+        setAvailabilityData(availRes.value.data.data);
+      }
+
+      if (compRes.status === "fulfilled" && compRes.value.data?.data) {
+        setCompensationData(compRes.value.data.data);
+      }
+
+      if (travelRes.status === "fulfilled" && travelRes.value.data?.data) {
+        setTravelData(travelRes.value.data.data);
+      }
     } catch (error) {
       console.log("Error fetching profile details:", error);
     }
@@ -90,19 +134,48 @@ const ProfileScreen = () => {
     userProfile?.fullName && (userProfile?.city || userProfile?.phone)
   );
   const isPreferencesComplete = Boolean(
-    completionScore?.jobPreferences && completionScore.jobPreferences > 0
+    (completionScore?.jobPreferences && completionScore.jobPreferences > 0) ||
+    (preferencesData && (
+      (preferencesData.primaryCategories && preferencesData.primaryCategories.length > 0) ||
+      (preferencesData.relocationPreferences && preferencesData.relocationPreferences.length > 0) ||
+      (preferencesData.travelPreferences && preferencesData.travelPreferences.length > 0) ||
+      (preferencesData.internationalRelocationPreferences && preferencesData.internationalRelocationPreferences.length > 0)
+    ))
   );
   const isSkillsComplete = Boolean(
-    completionScore?.skills && completionScore.skills > 0
+    (completionScore?.skillsPercentage && completionScore.skillsPercentage > 0) ||
+    (skillsData && (
+      (skillsData.clinicalSkills && skillsData.clinicalSkills.length > 0) ||
+      (skillsData.technicalSkills && skillsData.technicalSkills.length > 0) ||
+      (skillsData.softSkills && skillsData.softSkills.length > 0) ||
+      (Array.isArray(skillsData) && skillsData.length > 0)
+    ))
   );
   const isAvailabilityComplete = Boolean(
-    completionScore?.availability && completionScore.availability > 0
+    (completionScore?.availability && completionScore.availability > 0) ||
+    (availabilityData && (
+      (availabilityData.availableDays && availabilityData.availableDays.length > 0) ||
+      availabilityData.hoursPerWeek ||
+      availabilityData.availableFrom
+    ))
   );
   const isCompensationComplete = Boolean(
-    completionScore?.compensation && completionScore.compensation > 0
+    (completionScore?.compensation && completionScore.compensation > 0) ||
+    (compensationData && (
+      compensationData.salaryType ||
+      compensationData.expectedSalaryMin ||
+      compensationData.expectedHourlyRate ||
+      compensationData.minimum ||
+      compensationData.maximum
+    ))
   );
   const isTravelComplete = Boolean(
-    completionScore?.travelPreferences && completionScore.travelPreferences > 0
+    (completionScore?.travelPreferences && completionScore.travelPreferences > 0) ||
+    (travelData && (
+      travelData.willingToTravel !== undefined ||
+      (travelData.preferredWorkStyle && travelData.preferredWorkStyle.length > 0) ||
+      (travelData.preferredStatesOrRegions && travelData.preferredStatesOrRegions.length > 0)
+    ))
   );
 
   return (

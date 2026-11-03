@@ -18,14 +18,39 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const travelOptions = ["Travel Nurse", "Stationary Nurse", "Hybrid"];
-const stateOptions = ["Gujarat", "Maharashtra", "Goa"];
-const countryOptions = ["USA", "Canada", "UK", "Australia"];
+const relocationCountryOptions = ["USA", "UK", "Canada", "Australia", "Ireland"];
+const countryOptions = ["USA", "UK", "Canada", "Australia", "Ireland", "New Zealand", "Europe"];
+
+const stateOptionsByCountry: Record<string, string[]> = {
+  USA: [
+    "California", "Texas", "Florida", "New York", "Illinois",
+    "Pennsylvania", "Ohio", "Georgia", "North Carolina", "Michigan",
+    "Washington", "Massachusetts", "Arizona", "Colorado"
+  ],
+  UK: [
+    "England - Greater London", "England - South East", "England - North West",
+    "England - Midlands", "Scotland", "Wales", "Northern Ireland"
+  ],
+  Canada: [
+    "Ontario", "British Columbia", "Alberta", "Quebec", "Manitoba", "Nova Scotia"
+  ],
+  Australia: [
+    "New South Wales", "Victoria", "Queensland", "Western Australia", "South Australia"
+  ],
+  Ireland: [
+    "Dublin", "Cork", "Galway", "Limerick"
+  ]
+};
+
+const stateOptions = stateOptionsByCountry["USA"] || [];
+
 const primaryCategoriesOptions = [
   { label: "Travel Nurse", value: "Travel Nurse" },
   { label: "Stationary Nurse", value: "Stationary Nurse" },
   { label: "Specialized Nurse", value: "Specialized Nurse" },
   { label: "Crisis / Humanitarian Nurse", value: "Crisis / Humanitarian Nurse" },
 ];
+
 const humanitarianRolesOptions = [
   "Humanitarian Nurse",
   "Relief Nurse",
@@ -42,6 +67,7 @@ const Preference: React.FC = () => {
   const router = useRouter();
 
   const [willingnessToRelocate, setWillingnessToRelocate] = useState(false);
+  const [relocationCountry, setRelocationCountry] = useState<string>("USA");
   const [willingToTravel, setWillingToTravel] = useState(false);
   const [travelPreference, setTravelPreference] = useState<string[]>([]);
   const [relocationStates, setRelocationStates] = useState<string[]>([]);
@@ -58,18 +84,32 @@ const Preference: React.FC = () => {
   const fetchPreferences = async () => {
     try {
       const response = await appService.getPreferences();
-      if (response.data.success && response.data.data) {
+      if (response?.data?.success && response?.data?.data) {
         const data = response.data.data;
 
         // Map API data to state
-        setRelocationStates(data.relocationPreferences || []);
-        setWillingnessToRelocate(data.relocationPreferences?.length > 0);
+        const savedStates = data.relocationPreferences || [];
+        setRelocationStates(savedStates);
+        setWillingnessToRelocate(savedStates.length > 0);
 
-        setTravelPreference(data.travelPreferences || []);
-        setWillingToTravel(data.travelPreferences?.length > 0);
+        // Auto-detect country based on saved state
+        if (savedStates.length > 0) {
+          const firstState = savedStates[0];
+          for (const [country, states] of Object.entries(stateOptionsByCountry)) {
+            if (states.includes(firstState)) {
+              setRelocationCountry(country);
+              break;
+            }
+          }
+        }
 
-        setPreferredCountries(data.internationalRelocationPreferences || []);
-        setInternationalRelocation(data.internationalRelocationPreferences?.length > 0);
+        const savedTravel = data.travelPreferences || [];
+        setTravelPreference(savedTravel);
+        setWillingToTravel(savedTravel.length > 0);
+
+        const savedIntl = data.internationalRelocationPreferences || [];
+        setPreferredCountries(savedIntl);
+        setInternationalRelocation(savedIntl.length > 0);
 
         // Normalize legacy values
         const legacyMapping: Record<string, string> = {
@@ -80,13 +120,11 @@ const Preference: React.FC = () => {
         };
 
         const rawCategories = data.primaryCategories || [];
-        const normalizedCategories = rawCategories.map((c: string) => legacyMapping[c] || c);
-        // Deduplicate and filter to ensure only valid current options are kept or mapped
+        const normalizedCategories = (rawCategories || []).map((c: string) => legacyMapping[c] || c);
         const uniqueCategories = Array.from(new Set(normalizedCategories)) as string[];
         setPrimaryCategory(uniqueCategories);
 
         setHumanitarianRole(data.crisisHumanitarianPreferences || []);
-
         setHasPreferences(true);
       }
     } catch (error) {
@@ -107,7 +145,6 @@ const Preference: React.FC = () => {
   };
 
   const handleSave = async () => {
-    // Ensure we only send valid values for primaryCategories
     const validCategoryValues = primaryCategoriesOptions.map(o => o.value);
     const cleanedPrimaryCategories = primaryCategory.filter(c => validCategoryValues.includes(c));
 
@@ -127,7 +164,7 @@ const Preference: React.FC = () => {
         response = await appService.savePreferences(payload);
       }
 
-      if (response.data.success) {
+      if (response?.data?.success) {
         toast.success(response.data.message || "Preferences saved successfully.");
         setHasPreferences(true);
       }
@@ -143,6 +180,8 @@ const Preference: React.FC = () => {
     }
   };
 
+  const availableStates = stateOptionsByCountry[relocationCountry] || stateOptionsByCountry["USA"] || [];
+
   return (
     <SafeAreaView className="flex-1 bg-gray-white" edges={["top"]}>
       <KeyboardAvoidingView
@@ -150,7 +189,7 @@ const Preference: React.FC = () => {
         style={{ flex: 1 }}
       >
         <View className="flex-row items-center px-4 py-3 border-b border-gray-light">
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/app/(tabs)/profile"))}>
             <Ionicons
               name="arrow-back"
               size={22}
@@ -167,180 +206,83 @@ const Preference: React.FC = () => {
           contentContainerStyle={{ paddingBottom: 24 }}
           keyboardShouldPersistTaps="handled"
         >
-        <View className="flex-row justify-between items-center mt-4 mb-2">
-          <Text className="text-h4 font-medium text-text-primary">
-            Willingness to Relocate
-          </Text>
-          <Switch
-            value={willingnessToRelocate}
-            onValueChange={setWillingnessToRelocate}
-            trackColor={{ false: "#ccc", true: theme.palette.primary.main }}
-            thumbColor="#fff"
-          />
-        </View>
-
-        {willingnessToRelocate && (
-          <SelectComponent
-            value={relocationStates[0] || ""}
-            onChange={(val: any) => setRelocationStates([val])}
-            options={stateOptions.map((s) => ({ label: s, value: s }))}
-            placeholder="Select Relocation State"
-          />
-        )}
-
-        <View className="flex-row justify-between items-center mt-4 mb-2">
-          <Text className="text-h4 font-medium text-text-primary">
-            Willing to Travel
-          </Text>
-          <Switch
-            value={willingToTravel}
-            onValueChange={setWillingToTravel}
-            trackColor={{ false: "#ccc", true: theme.palette.primary.main }}
-            thumbColor="#fff"
-          />
-        </View>
-
-        {willingToTravel && (
-          <View className="mt-2">
-            {travelOptions.map((item) => {
-              const selected = travelPreference.includes(item);
-              return (
-                <TouchableOpacity
-                  key={item}
-                  onPress={() =>
-                    toggleArrayValue(item, travelPreference, setTravelPreference)
-                  }
-                  className={`flex-row items-center px-4 py-3 mb-2 rounded-lg border ${selected
-                    ? "bg-primary-light1 border-primary-light1"
-                    : "bg-white border-gray-light"
-                    }`}
-                >
-                  <View
-                    className={`w-5 h-5 rounded border mr-3 items-center justify-center ${selected
-                      ? "bg-primary-main border-white"
-                      : "bg-white border-gray-medium"
-                      }`}
-                  >
-                    {selected && (
-                      <Ionicons name="checkmark" size={16} color="white" />
-                    )}
-                  </View>
-                  <Text
-                    className={`text-small ${selected ? "text-primary-main font-medium" : "text-text-primary"
-                      }`}
-                  >
-                    {item}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
-
-        <View className="flex-row justify-between items-center mt-4 mb-2">
-          <Text className="text-h4 font-medium text-text-primary">
-            International Relocation
-          </Text>
-          <Switch
-            value={internationalRelocation}
-            onValueChange={setInternationalRelocation}
-            trackColor={{ false: "#ccc", true: theme.palette.primary.main }}
-            thumbColor="#fff"
-          />
-        </View>
-
-        {internationalRelocation && (
-          <SelectComponent
-            value={preferredCountries[0] || ""}
-            onChange={(val: any) => setPreferredCountries([val])}
-            options={countryOptions.map((c) => ({ label: c, value: c }))}
-            placeholder="Select Country"
-          />
-        )}
-
-        <Text className="text-h4 font-medium mt-4 mb-2 text-text-primary">
-          Primary Categories
-        </Text>
-
-        {primaryCategoriesOptions.length > 0 && (
-          <View className="mt-2">
-            {primaryCategoriesOptions.map((item) => {
-              const selected = primaryCategory.includes(item.value);
-              return (
-                <TouchableOpacity
-                  key={item.value}
-                  onPress={() =>
-                    toggleArrayValue(
-                      item.value,
-                      primaryCategory,
-                      setPrimaryCategory
-                    )
-                  }
-                  className={`flex-row items-center px-4 py-3 mb-2 rounded-lg border ${selected
-                    ? "bg-primary-light1 border-primary-light1"
-                    : "bg-white border-gray-light"
-                    }`}
-                >
-                  <View
-                    className={`w-5 h-5 rounded border mr-3 items-center justify-center ${selected
-                      ? "bg-primary-main border-white"
-                      : "bg-white border-gray-medium"
-                      }`}
-                  >
-                    {selected && (
-                      <Ionicons name="checkmark" size={16} color="white" />
-                    )}
-                  </View>
-                  <Text
-                    className={`text-small ${selected ? "text-primary-main font-medium" : "text-text-primary"
-                      }`}
-                  >
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
-
-        {primaryCategory.includes("Crisis / Humanitarian Nurse") && (
-          <>
-            <Text className="text-h4 font-medium mt-4 mb-2 text-text-primary">
-              Humanitarian Roles
+          {/* Willingness to Relocate */}
+          <View className="flex-row justify-between items-center mt-4 mb-2">
+            <Text className="text-h4 font-medium text-text-primary">
+              Willingness to Relocate
             </Text>
+            <Switch
+              value={willingnessToRelocate}
+              onValueChange={setWillingnessToRelocate}
+              trackColor={{ false: "#ccc", true: theme.palette.primary.main }}
+              thumbColor="#fff"
+            />
+          </View>
+
+          {willingnessToRelocate && (
+            <View className="mt-2 gap-3">
+              <SelectComponent
+                value={relocationCountry}
+                onChange={(val: any) => {
+                  setRelocationCountry(val);
+                  setRelocationStates([]);
+                }}
+                options={relocationCountryOptions.map((c) => ({ label: c, value: c }))}
+                placeholder="Select Country"
+              />
+              <SelectComponent
+                value={relocationStates[0] || ""}
+                onChange={(val: any) => setRelocationStates([val])}
+                options={availableStates.map((s) => ({ label: s, value: s }))}
+                placeholder="Select Relocation State"
+              />
+            </View>
+          )}
+
+          {/* Willing to Travel */}
+          <View className="flex-row justify-between items-center mt-4 mb-2">
+            <Text className="text-h4 font-medium text-text-primary">
+              Willing to Travel
+            </Text>
+            <Switch
+              value={willingToTravel}
+              onValueChange={setWillingToTravel}
+              trackColor={{ false: "#ccc", true: theme.palette.primary.main }}
+              thumbColor="#fff"
+            />
+          </View>
+
+          {willingToTravel && (
             <View className="mt-2">
-              {humanitarianRolesOptions.map((item) => {
-                const selected = humanitarianRole.includes(item);
+              {travelOptions.map((item) => {
+                const selected = travelPreference.includes(item);
                 return (
                   <TouchableOpacity
                     key={item}
                     onPress={() =>
-                      toggleArrayValue(
-                        item,
-                        humanitarianRole,
-                        setHumanitarianRole
-                      )
+                      toggleArrayValue(item, travelPreference, setTravelPreference)
                     }
-                    className={`flex-row items-center px-4 py-3 mb-2 rounded-lg border ${selected
-                      ? "bg-primary-light1 border-primary-light1"
-                      : "bg-white border-gray-light"
-                      }`}
+                    className={`flex-row items-center px-4 py-3 mb-2 rounded-lg border ${
+                      selected
+                        ? "bg-primary-light1 border-primary-light1"
+                        : "bg-white border-gray-light"
+                    }`}
                   >
                     <View
-                      className={`w-5 h-5 rounded border mr-3 items-center justify-center ${selected
-                        ? "bg-primary-main border-white"
-                        : "bg-white border-gray-medium"
-                        }`}
+                      className={`w-5 h-5 rounded border mr-3 items-center justify-center ${
+                        selected
+                          ? "bg-primary-main border-white"
+                          : "bg-white border-gray-medium"
+                      }`}
                     >
                       {selected && (
                         <Ionicons name="checkmark" size={16} color="white" />
                       )}
                     </View>
                     <Text
-                      className={`text-small ${selected
-                        ? "text-primary-main font-medium"
-                        : "text-text-primary"
-                        }`}
+                      className={`text-small ${
+                        selected ? "text-primary-main font-medium" : "text-text-primary"
+                      }`}
                     >
                       {item}
                     </Text>
@@ -348,18 +290,140 @@ const Preference: React.FC = () => {
                 );
               })}
             </View>
-          </>
-        )}
-      </ScrollView>
+          )}
 
-      <View
-        className="px-4 pt-2 mt-auto bg-gray-white border-t border-gray-light"
-        style={{ paddingBottom: Math.max(insets.bottom, 16) }}
-      >
-        <ButtonComponent title="Save Preferences" onPress={handleSave} />
-      </View>
-    </KeyboardAvoidingView>
-  </SafeAreaView>
+          {/* International Relocation */}
+          <View className="flex-row justify-between items-center mt-4 mb-2">
+            <Text className="text-h4 font-medium text-text-primary">
+              International Relocation
+            </Text>
+            <Switch
+              value={internationalRelocation}
+              onValueChange={setInternationalRelocation}
+              trackColor={{ false: "#ccc", true: theme.palette.primary.main }}
+              thumbColor="#fff"
+            />
+          </View>
+
+          {internationalRelocation && (
+            <SelectComponent
+              value={preferredCountries[0] || ""}
+              onChange={(val: any) => setPreferredCountries([val])}
+              options={countryOptions.map((c) => ({ label: c, value: c }))}
+              placeholder="Select Country"
+            />
+          )}
+
+          {/* Primary Categories */}
+          <Text className="text-h4 font-medium mt-4 mb-2 text-text-primary">
+            Primary Categories
+          </Text>
+
+          {primaryCategoriesOptions.length > 0 && (
+            <View className="mt-2">
+              {primaryCategoriesOptions.map((item) => {
+                const selected = primaryCategory.includes(item.value);
+                return (
+                  <TouchableOpacity
+                    key={item.value}
+                    onPress={() =>
+                      toggleArrayValue(
+                        item.value,
+                        primaryCategory,
+                        setPrimaryCategory
+                      )
+                    }
+                    className={`flex-row items-center px-4 py-3 mb-2 rounded-lg border ${
+                      selected
+                        ? "bg-primary-light1 border-primary-light1"
+                        : "bg-white border-gray-light"
+                    }`}
+                  >
+                    <View
+                      className={`w-5 h-5 rounded border mr-3 items-center justify-center ${
+                        selected
+                          ? "bg-primary-main border-white"
+                          : "bg-white border-gray-medium"
+                      }`}
+                    >
+                      {selected && (
+                        <Ionicons name="checkmark" size={16} color="white" />
+                      )}
+                    </View>
+                    <Text
+                      className={`text-small ${
+                        selected ? "text-primary-main font-medium" : "text-text-primary"
+                      }`}
+                    >
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
+          {/* Humanitarian Roles */}
+          {primaryCategory.includes("Crisis / Humanitarian Nurse") && (
+            <>
+              <Text className="text-h4 font-medium mt-4 mb-2 text-text-primary">
+                Humanitarian Roles
+              </Text>
+              <View className="mt-2">
+                {humanitarianRolesOptions.map((item) => {
+                  const selected = humanitarianRole.includes(item);
+                  return (
+                    <TouchableOpacity
+                      key={item}
+                      onPress={() =>
+                        toggleArrayValue(
+                          item,
+                          humanitarianRole,
+                          setHumanitarianRole
+                        )
+                      }
+                      className={`flex-row items-center px-4 py-3 mb-2 rounded-lg border ${
+                        selected
+                          ? "bg-primary-light1 border-primary-light1"
+                          : "bg-white border-gray-light"
+                      }`}
+                    >
+                      <View
+                        className={`w-5 h-5 rounded border mr-3 items-center justify-center ${
+                          selected
+                            ? "bg-primary-main border-white"
+                            : "bg-white border-gray-medium"
+                        }`}
+                      >
+                        {selected && (
+                          <Ionicons name="checkmark" size={16} color="white" />
+                        )}
+                      </View>
+                      <Text
+                        className={`text-small ${
+                          selected
+                            ? "text-primary-main font-medium"
+                            : "text-text-primary"
+                        }`}
+                      >
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </>
+          )}
+        </ScrollView>
+
+        <View
+          className="px-4 pt-2 mt-auto bg-gray-white border-t border-gray-light"
+          style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+        >
+          <ButtonComponent title="Save Preferences" onPress={handleSave} />
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

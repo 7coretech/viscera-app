@@ -35,7 +35,8 @@ const LoginScreen = () => {
   const { isTablet } = useResponsive();
   const dispatch = useDispatch<AppDispatch>();
 
-  const { loading } = useSelector((state: RootState) => state.auth);
+  const { loading: authLoading } = useSelector((state: RootState) => state.auth);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const {
     control,
@@ -51,12 +52,19 @@ const LoginScreen = () => {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    const resultAction = await dispatch(loginUser(data));
-    if (loginUser.fulfilled.match(resultAction)) {
-      toast.success("Welcome back!");
-      router.push('/app/home');
-    } else {
-      toast.error((resultAction.payload as string) || "Invalid credentials");
+    setIsSubmitting(true);
+    try {
+      const resultAction = await dispatch(loginUser(data));
+      if (loginUser.fulfilled.match(resultAction)) {
+        toast.success("Welcome back!");
+        router.push('/app/home');
+      } else {
+        toast.error((resultAction.payload as string) || "Invalid credentials");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Invalid credentials");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -107,7 +115,7 @@ const LoginScreen = () => {
                         autoCapitalize="none"
                         error={!!errors.email}
                         helperText={errors.email?.message}
-                        editable={!loading}
+                        editable={!isSubmitting}
                       />
                     )}
                   />
@@ -129,7 +137,7 @@ const LoginScreen = () => {
                         value={value}
                         error={!!errors.password}
                         helperText={errors.password?.message}
-                        editable={!loading}
+                        editable={!isSubmitting}
                       />
                     )}
                   />
@@ -151,10 +159,10 @@ const LoginScreen = () => {
               </TouchableOpacity>
 
               <ButtonComponent
-                title={loading ? "Signing In..." : "Sign In"}
+                title={isSubmitting ? "Signing In..." : "Sign In"}
                 variant="gradient"
                 onPress={handleSubmit(onSubmit)}
-                loading={loading}
+                loading={isSubmitting}
               />
 
               <View className="flex-row justify-center items-center mt-4 gap-0.3">

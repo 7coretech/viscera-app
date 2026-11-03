@@ -122,13 +122,20 @@ const JobDetailsScreen = () => {
       return;
     }
 
+    if (!isApplied) {
+      Alert.alert(
+        "Application Required",
+        "Please submit your application for this position first. Once the recruiter reviews your profile, they will be able to initiate a conversation with you."
+      );
+      return;
+    }
+
     try {
       setChatLoading(true);
       // Try starting chat with applicationId if we have it, else fallback to jobId
       const idToUse = applicationId || jobId;
       const response = await chatService.startChat(idToUse);
-      // Assuming response format: { success: true, data: { conversationId: "..." } }
-      if (response.success && response.data.conversationId) {
+      if (response.success && response.data?.conversationId) {
         route.push({
           pathname: "/app/ChatRoom",
           params: {
@@ -137,10 +144,18 @@ const JobDetailsScreen = () => {
             avatar: job.companyLogo || "",
           }
         });
+      } else {
+        Alert.alert(
+          "Application Under Review",
+          "Recruiters initiate conversations once they review and shortlist your application. You will receive an instant notification when the recruiter messages you."
+        );
       }
     } catch (error) {
-      console.error("Error starting chat:", error);
-      Alert.alert("Error", "Could not start conversation. Please try again.");
+      console.log("Info: Conversation not yet open:", error);
+      Alert.alert(
+        "Application Under Review",
+        "Recruiters initiate conversations once they review and shortlist your application. You will receive an instant notification when the recruiter messages you."
+      );
     } finally {
       setChatLoading(false);
     }

@@ -39,6 +39,10 @@ const Documents = () => {
 
     if (!result.canceled && result.assets[0]) {
       const file = result.assets[0];
+      if (file.size && file.size > 15 * 1024 * 1024) {
+        toast.error("File size exceeds 15MB limit. Please select a smaller file.");
+        return;
+      }
       setLoading(true);
 
       try {
@@ -193,6 +197,9 @@ const Documents = () => {
 
             <Text className="text-center text-small text-text-secondary mt-1 px-8">
               Upload your certifications, ID, and other important documents
+            </Text>
+            <Text className="text-center text-caption text-text-secondary mt-1">
+              Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 15MB)
             </Text>
 
             <TouchableOpacity

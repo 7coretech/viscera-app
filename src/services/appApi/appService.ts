@@ -56,7 +56,7 @@ const uploadFormData = async (endpoint: string, formData: FormData, method = 'PO
     } catch {
         const cleanText = rawText.replace(/<[^>]*>?/gm, '').trim();
         if (response.status === 413) {
-            data = { message: 'Image file size is too large. Please select a smaller photo.' };
+            data = { message: 'File size exceeds 15MB limit. Please select a smaller file.' };
         } else if (response.status === 401) {
             data = { message: 'Authentication expired. Please log in again.' };
         } else if (response.status === 500) {

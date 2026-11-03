@@ -37,7 +37,8 @@ const workStatusOptions = [
 const BasicInfo: React.FC<Props> = ({ onNext, defaultValues }) => {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { loading } = useAppSelector((state) => state.auth);
+  const { loading: authLoading } = useAppSelector((state) => state.auth);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const {
     control,
@@ -183,7 +184,7 @@ const BasicInfo: React.FC<Props> = ({ onNext, defaultValues }) => {
         variant="gradient"
         className="mt-6"
         onPress={handleSubmit(onSubmit)}
-        loading={loading}
+        loading={isSubmitting}
       />
 
       <View className="mt-4 px-2">

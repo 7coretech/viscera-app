@@ -107,6 +107,10 @@ const ApplyJobModal: React.FC<ApplyJobModalProps> = ({
 
     if (!result.canceled && result.assets[0]) {
       const file = result.assets[0];
+      if (file.size && file.size > 15 * 1024 * 1024) {
+        toast.error("File size exceeds 15MB limit. Please select a smaller file.");
+        return;
+      }
       setUploadingResume(true);
 
       try {
@@ -263,6 +267,9 @@ const ApplyJobModal: React.FC<ApplyJobModalProps> = ({
                       </Text>
                     </TouchableOpacity>
                   </View>
+                  <Text className="text-[12px] text-text-secondary mb-2">
+                    Supported formats: PDF, DOC, DOCX (Max 15MB)
+                  </Text>
 
                   {resumes.length === 0 ? (
                     <TouchableOpacity

@@ -16,6 +16,10 @@ expo-env.d.ts
 *.p8
 *.p12
 *.key
+credentials.json
+certs/
+recordings/
+scripts/apply*.js
 *.mobileprovision
 fcm-service-account.json
 
@@ -63,6 +67,10 @@ expo-env.d.ts
 *.p8
 *.p12
 *.key
+credentials.json
+certs/
+recordings/
+scripts/apply*.js
 *.mobileprovision
 
 # Metro

@@ -207,6 +207,10 @@ const authSlice = createSlice({
                 state.accessToken = action.payload.accessToken;
                 state.refreshToken = action.payload.refreshToken;
             })
+            .addCase(registerUser.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
             // Logout
             .addCase(logoutUser.fulfilled, (state) => {
                 state.user = null;
