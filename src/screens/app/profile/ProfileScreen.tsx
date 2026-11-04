@@ -1,3 +1,4 @@
+import { sessionCache } from '@/src/services/sessionCache';
 import { appService } from "@/src/services/appApi/appService";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -12,18 +13,18 @@ import { cleanProfileImageUrl } from "@/src/utils/imageUtils";
 const ProfileScreen = () => {
   const router = useRouter();
   const authUser = useSelector((state: RootState) => state.auth.user);
-  const [userProfile, setUserProfile] = useState<any>(authUser || null);
-  const [preferencesData, setPreferencesData] = useState<any>(null);
-  const [skillsData, setSkillsData] = useState<any>(null);
-  const [availabilityData, setAvailabilityData] = useState<any>(null);
-  const [compensationData, setCompensationData] = useState<any>(null);
-  const [travelData, setTravelData] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(() => sessionCache.get('prof_userProfile') || authUser || null);
+  const [preferencesData, setPreferencesData] = useState<any>(() => sessionCache.get('prof_preferencesData') || null);
+  const [skillsData, setSkillsData] = useState<any>(() => sessionCache.get('prof_skillsData') || null);
+  const [availabilityData, setAvailabilityData] = useState<any>(() => sessionCache.get('prof_availabilityData') || null);
+  const [compensationData, setCompensationData] = useState<any>(() => sessionCache.get('prof_compensationData') || null);
+  const [travelData, setTravelData] = useState<any>(() => sessionCache.get('prof_travelData') || null);
   const [imageError, setImageError] = useState(false);
-  const [completionScore, setCompletionScore] = useState<any>(null);
-  const [licenseCount, setLicenseCount] = useState<number>(0);
-  const [resumeCount, setResumeCount] = useState<number>(0);
-  const [docCount, setDocCount] = useState<number>(0);
-  const [expCount, setExpCount] = useState<number>(0);
+  const [completionScore, setCompletionScore] = useState<any>(() => sessionCache.get('prof_completionScore') || null);
+  const [licenseCount, setLicenseCount] = useState<number>(() => sessionCache.get('prof_licenseCount') ?? 0);
+  const [resumeCount, setResumeCount] = useState<number>(() => sessionCache.get('prof_resumeCount') ?? 0);
+  const [docCount, setDocCount] = useState<number>(() => sessionCache.get('prof_docCount') ?? 0);
+  const [expCount, setExpCount] = useState<number>(() => sessionCache.get('prof_expCount') ?? 0);
 
   useFocusEffect(
     useCallback(() => {

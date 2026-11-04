@@ -1,3 +1,4 @@
+import { sessionCache } from '@/src/services/sessionCache';
 import ApplyJobModal from "@/src/components/ApplyJobModal";
 import { appService } from "@/src/services/appApi/appService";
 import { formatSalary } from "@/src/utils/salary";
@@ -24,10 +25,10 @@ const JobsScreen = () => {
   const { tab } = useLocalSearchParams<{ tab: string }>();
   const [activeTab, setActiveTab] =
     useState<(typeof TABS)[number]>("Recommended");
-  const [jobs, setJobs] = useState<any[]>([]);
-  const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
-  const [savedJobs, setSavedJobs] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [jobs, setJobs] = useState<any[]>(() => sessionCache.get<any[]>('jobs_Recommended') || []);
+  const [appliedJobs, setAppliedJobs] = useState<string[]>(() => sessionCache.get<string[]>('appliedJobs') || []);
+  const [savedJobs, setSavedJobs] = useState<string[]>(() => sessionCache.get<string[]>('savedJobs') || []);
+  const [loading, setLoading] = useState(() => !sessionCache.has('jobs_Recommended'));
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJobForApply, setSelectedJobForApply] = useState<any>(null);
   const [applyModalVisible, setApplyModalVisible] = useState(false);
@@ -103,6 +104,7 @@ const JobsScreen = () => {
             return id ? String(id) : null;
           }).filter(Boolean) as string[];
           setAppliedJobs(ids);
+          sessionCache.set('appliedJobs', ids);
         }
       }
 
@@ -114,6 +116,7 @@ const JobsScreen = () => {
             return id ? String(id) : null;
           }).filter(Boolean) as string[];
           setSavedJobs(ids);
+          sessionCache.set('savedJobs', ids);
         }
       }
     } catch (error) {
@@ -122,12 +125,20 @@ const JobsScreen = () => {
   };
 
   const fetchJobs = async () => {
-    try {
+    const cacheKey = 'jobs_' + activeTab;
+    const cached = sessionCache.get<any[]>(cacheKey);
+    if (cached && cached.length > 0) {
+      setJobs(cached);
+    } else {
       setLoading(true);
+    }
+
+    try {
       if (activeTab === "Recommended") {
         const res = await appService.getJobs();
         if (res.data && Array.isArray(res.data.data)) {
           setJobs(res.data.data);
+          sessionCache.set(cacheKey, res.data.data);
         }
       } else {
         if (!accessToken) {
@@ -139,6 +150,7 @@ const JobsScreen = () => {
         const res = await appService.getApplicantJobs(type);
         if (res.data && Array.isArray(res.data.data)) {
           setJobs(res.data.data);
+          sessionCache.set(cacheKey, res.data.data);
         }
       }
     } catch (error) {
@@ -165,7 +177,12 @@ const JobsScreen = () => {
   const handleApplySuccess = () => {
     const jobId = selectedJobForApply?.id || selectedJobForApply?._id || selectedJobForApply?.jobId;
     if (jobId) {
-      setAppliedJobs((prev) => [...prev, jobId]);
+      setAppliedJobs((prev) => {
+        const next = [...prev, String(jobId)];
+        sessionCache.set('appliedJobs', next);
+        return next;
+      });
+      sessionCache.invalidate('jobs_Applied');
     }
     if (activeTab === "Applied") {
       fetchJobs();
