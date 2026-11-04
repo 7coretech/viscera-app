@@ -59,6 +59,7 @@ const BasicInfo: React.FC<Props> = ({ onNext, defaultValues }) => {
 
   const onSubmit = async (data: BasicInfoFormData) => {
     try {
+      setIsSubmitting(true);
       // 1. Register User
       const registerResult = await dispatch(registerUser(data)).unwrap();
 
@@ -70,6 +71,8 @@ const BasicInfo: React.FC<Props> = ({ onNext, defaultValues }) => {
       }
     } catch (err: any) {
       toast.error(err || "Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -89,7 +92,7 @@ const BasicInfo: React.FC<Props> = ({ onNext, defaultValues }) => {
                 value={value}
                 error={!!errors.fullName}
                 helperText={errors.fullName?.message}
-                editable={!loading}
+                editable={!isSubmitting}
               />
             )}
           />
@@ -110,7 +113,7 @@ const BasicInfo: React.FC<Props> = ({ onNext, defaultValues }) => {
                 autoCapitalize="none"
                 error={!!errors.email}
                 helperText={errors.email?.message}
-                editable={!loading}
+                editable={!isSubmitting}
               />
             )}
           />
@@ -130,7 +133,7 @@ const BasicInfo: React.FC<Props> = ({ onNext, defaultValues }) => {
                 keyboardType="phone-pad"
                 error={!!errors.mobile}
                 helperText={errors.mobile?.message}
-                editable={!loading}
+                editable={!isSubmitting}
               />
             )}
           />
@@ -149,7 +152,7 @@ const BasicInfo: React.FC<Props> = ({ onNext, defaultValues }) => {
                 value={value}
                 error={!!errors.workStatus}
                 helperText={errors.workStatus?.message}
-                editable={!loading}
+                editable={!isSubmitting}
               />
             )}
           />
@@ -170,7 +173,7 @@ const BasicInfo: React.FC<Props> = ({ onNext, defaultValues }) => {
                 value={value}
                 error={!!errors.password}
                 helperText={errors.password?.message}
-                editable={!loading}
+                editable={!isSubmitting}
               />
             )}
           />
@@ -180,7 +183,7 @@ const BasicInfo: React.FC<Props> = ({ onNext, defaultValues }) => {
       </View>
 
       <ButtonComponent
-        title={loading ? "Registering..." : "Continue to Verification"}
+        title={isSubmitting ? "Registering..." : "Continue to Verification"}
         variant="gradient"
         className="mt-6"
         onPress={handleSubmit(onSubmit)}
