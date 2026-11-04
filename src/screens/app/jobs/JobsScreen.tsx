@@ -53,10 +53,19 @@ const JobsScreen = () => {
     }
   }, [activeTab, accessToken]);
 
+  const appliedJobIdsSet = React.useMemo(
+    () => new Set(appliedJobs.map(String)),
+    [appliedJobs]
+  );
+  const savedJobIdsSet = React.useMemo(
+    () => new Set(savedJobs.map(String)),
+    [savedJobs]
+  );
+
   const filteredJobs = jobs.filter((job) => {
-    const jobId = job.id || job._id || job.jobId;
+    const jobId = String(job.id || job._id || job.jobId || "");
     // Industry standard: In Recommended feed, hide jobs already applied to
-    if (activeTab === "Recommended" && appliedJobs.includes(jobId)) {
+    if (activeTab === "Recommended" && appliedJobIdsSet.has(jobId)) {
       return false;
     }
     if (!searchQuery) return true;
@@ -89,7 +98,10 @@ const JobsScreen = () => {
       if (appliedRes.status === 'fulfilled' && appliedRes.value?.data) {
         const arr = appliedRes.value.data?.data || appliedRes.value.data;
         if (Array.isArray(arr)) {
-          const ids = arr.map((item: any) => item.id || item.jobId || item._id).filter(Boolean);
+          const ids = arr.map((item: any) => {
+            const id = item?.jobId?.id || item?.jobId?._id || item?.jobId || item?.id || item?._id;
+            return id ? String(id) : null;
+          }).filter(Boolean) as string[];
           setAppliedJobs(ids);
         }
       }
@@ -97,7 +109,10 @@ const JobsScreen = () => {
       if (savedRes.status === 'fulfilled' && savedRes.value?.data) {
         const arr = savedRes.value.data?.data || savedRes.value.data;
         if (Array.isArray(arr)) {
-          const ids = arr.map((item: any) => item.id || item.jobId || item._id).filter(Boolean);
+          const ids = arr.map((item: any) => {
+            const id = item?.jobId?.id || item?.jobId?._id || item?.jobId || item?.id || item?._id;
+            return id ? String(id) : null;
+          }).filter(Boolean) as string[];
           setSavedJobs(ids);
         }
       }
@@ -136,6 +151,11 @@ const JobsScreen = () => {
   const handleApplyClick = (job: any) => {
     if (!accessToken) {
       Alert.alert("Login Required", "Please login to apply for this job.");
+      return;
+    }
+    const jobId = String(job.id || job._id || job.jobId || "");
+    if (appliedJobIdsSet.has(jobId)) {
+      Alert.alert("Already Applied", "You have already applied for this job.");
       return;
     }
     setSelectedJobForApply(job);
@@ -253,13 +273,11 @@ const JobsScreen = () => {
             </Text>
           }
           renderItem={({ item }) => {
-            const jobId = item.id || item._id || item.jobId;
-            console.log("Job Item Full:", JSON.stringify(item, null, 2));
-            console.log("Resolved Job ID:", jobId);
+            const jobId = String(item.id || item._id || item.jobId || "");
 
-            // In Applied tab, every job is already applied
-            const isApplied = activeTab === "Applied" || appliedJobs.includes(jobId);
-            const isSaved = savedJobs.includes(jobId);
+            // In Applied tab or if already applied, mark applied
+            const isApplied = activeTab === "Applied" || appliedJobIdsSet.has(jobId);
+            const isSaved = savedJobIdsSet.has(jobId);
 
             return (
               <View className="bg-gray-white rounded-xl p-4 mb-3 border border-gray-light">

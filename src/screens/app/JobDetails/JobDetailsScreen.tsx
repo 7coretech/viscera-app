@@ -36,9 +36,12 @@ const JobDetailsScreen = () => {
     if (!accessToken) return;
     try {
       const appliedRes = await appService.getApplicantJobs('apply');
-      if (appliedRes.data && Array.isArray(appliedRes.data.data)) {
-        const appliedItems = appliedRes.data.data;
-        const match = appliedItems.find((item: any) => item.id === jobId || item.jobId === jobId) as any;
+      const appliedItems = appliedRes?.data?.data || appliedRes?.data;
+      if (Array.isArray(appliedItems)) {
+        const match = appliedItems.find((item: any) => {
+          const itemJobId = item?.jobId?.id || item?.jobId?._id || item?.jobId || item?.id || item?._id;
+          return String(itemJobId) === String(jobId);
+        }) as any;
         if (match) {
           setIsApplied(true);
           setApplicationId(match.applicationId || match.id || null);
@@ -55,7 +58,10 @@ const JobDetailsScreen = () => {
       const savedRes = await appService.getApplicantJobs('save');
       const items = savedRes?.data?.data || savedRes?.data;
       if (Array.isArray(items)) {
-        const match = items.some((item: any) => (item.id || item.jobId) === jobId);
+        const match = items.some((item: any) => {
+          const itemJobId = item?.jobId?.id || item?.jobId?._id || item?.jobId || item?.id || item?._id;
+          return String(itemJobId) === String(jobId);
+        });
         setIsSaved(match);
       }
     } catch (error) {
