@@ -57,7 +57,7 @@ const LoginScreen = () => {
       const resultAction = await dispatch(loginUser(data));
       if (loginUser.fulfilled.match(resultAction)) {
         toast.success("Welcome back!");
-        router.push('/app/home');
+        router.replace('/app/home');
       } else {
         toast.error((resultAction.payload as string) || "Invalid credentials");
       }
