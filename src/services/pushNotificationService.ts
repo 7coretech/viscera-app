@@ -165,28 +165,43 @@ export function setupNotificationListeners(
   });
 
   // Listener for user tapping on notification
-  const responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
+  const responseSubscription = Notifications.addNotificationResponseReceivedListener(async (response) => {
     console.log('[Push] Notification response received:', response);
-    const data = response?.notification?.request?.content?.data as any;
-
-    if (data?.url) {
-      const url = String(data.url);
-      if (url.includes('chat')) {
-        router.push('/app/(tabs)/chat' as any);
+    try {
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      if (!accessToken) {
+        console.log('[Push] User not authenticated, skipping notification navigation.');
         return;
       }
-    }
 
-    if (data?.jobId) {
-      router.push({
-        pathname: '/app/JobDetail',
-        params: { jobId: data.jobId },
-      } as any);
-      return;
-    }
+      const data = response?.notification?.request?.content?.data as any;
+      if (!data) return;
 
-    // Default fallback to Notifications screen
-    router.push('/app/Notifications' as any);
+      if (data?.url) {
+        const url = String(data.url);
+        if (url.includes('chat')) {
+          router.push('/app/(tabs)/chat' as any);
+          return;
+        }
+        router.push(url as any);
+        return;
+      }
+
+      if (data?.jobId) {
+        router.push({
+          pathname: '/app/JobDetail',
+          params: { jobId: data.jobId },
+        } as any);
+        return;
+      }
+
+      if (data?.screen === 'notifications' || data?.type === 'notification') {
+        router.push('/app/Notifications' as any);
+        return;
+      }
+    } catch (err) {
+      console.error('[Push] Error handling notification tap:', err);
+    }
   });
 
   return () => {
