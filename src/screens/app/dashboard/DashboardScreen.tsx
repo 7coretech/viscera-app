@@ -1,4 +1,3 @@
-import { sessionCache } from '@/src/services/sessionCache';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { appService } from "@/src/services/appApi/appService";
 import { RootState } from "@/src/store";
@@ -64,13 +63,13 @@ const DashboardScreen = () => {
   const dispatch = useDispatch();
   const { accessToken } = useSelector((state: RootState) => state.auth);
   const { unreadCount: unreadChatCount } = useSelector((state: RootState) => state.chat);
-  const [userProfile, setUserProfile] = useState<any>(() => sessionCache.get('dash_userProfile') || null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [greeting, setGreeting] = useState("Good Morning");
-  const [completionScore, setCompletionScore] = useState<any>(() => sessionCache.get('dash_completionScore') || null);
-  const [totalCompletion, setTotalCompletion] = useState<number>(() => sessionCache.get('dash_totalCompletion') || 0);
-  const [savedCount, setSavedCount] = useState<number>(() => sessionCache.get('dash_savedCount') || 0);
-  const [appliedCount, setAppliedCount] = useState<number>(() => sessionCache.get('dash_appliedCount') || 0);
-  const [unreadNotifications, setUnreadNotifications] = useState<number>(() => sessionCache.get('dash_unreadNotifications') || 0);
+  const [completionScore, setCompletionScore] = useState<any>(null);
+  const [totalCompletion, setTotalCompletion] = useState(0);
+  const [savedCount, setSavedCount] = useState(0);
+  const [appliedCount, setAppliedCount] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
@@ -92,7 +91,6 @@ const DashboardScreen = () => {
       const d = base?.data || base || {};
       const count = Number(d?.unread ?? d?.unreadCount ?? d?.count ?? 0);
       setUnreadNotifications(count);
-      sessionCache.set('dash_unreadNotifications', count);
     } catch {
       try {
         const notifRes = await appService.getNotifications();
@@ -114,7 +112,6 @@ const DashboardScreen = () => {
       const response = await appService.getUserProfile();
       if (response.data.success) {
         setUserProfile(response.data.data);
-        sessionCache.set('dash_userProfile', response.data.data);
         await AsyncStorage.setItem("user", JSON.stringify(response.data.data));
       }
     } catch (error) {
@@ -128,10 +125,8 @@ const DashboardScreen = () => {
       if (response.data.success) {
         const data = response.data.data;
         setCompletionScore(data);
-        sessionCache.set('dash_completionScore', data);
         const total = Object.values(data).reduce((acc: number, val: any) => acc + (typeof val === 'number' ? val : 0), 0);
         setTotalCompletion(total);
-        sessionCache.set('dash_totalCompletion', total);
       }
     } catch (error) {
       console.log("Error fetching completion score:", error);
@@ -147,11 +142,9 @@ const DashboardScreen = () => {
 
       if (savedRes.data && Array.isArray(savedRes.data.data)) {
         setSavedCount(savedRes.data.data.length);
-        sessionCache.set('dash_savedCount', savedRes.data.data.length);
       }
       if (appliedRes.data && Array.isArray(appliedRes.data.data)) {
         setAppliedCount(appliedRes.data.data.length);
-        sessionCache.set('dash_appliedCount', appliedRes.data.data.length);
       }
     } catch (error) {
       console.log("Error fetching job counts:", error);

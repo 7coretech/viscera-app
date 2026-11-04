@@ -1,4 +1,3 @@
-import { sessionCache } from '../services/sessionCache';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { authService, otpService } from '../services/authApi/authService';
@@ -122,7 +121,6 @@ export const logoutUser = createAsyncThunk(
         } catch (error: any) {
             return rejectWithValue(typeof error === 'string' ? error : (error.response?.data?.message || error.message || 'Logout failed'));
         } finally {
-            sessionCache.clear();
             await unregisterDevicePushToken().catch(console.error);
             await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'user']);
         }
@@ -159,7 +157,6 @@ const authSlice = createSlice({
     initialState,
     reducers: {
         logout: (state) => {
-            sessionCache.clear();
             state.user = null;
             state.accessToken = null;
             state.refreshToken = null;
