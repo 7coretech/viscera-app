@@ -15,7 +15,7 @@ const PrivacyPolicyScreen = () => {
   const insets = useSafeAreaInsets();
 
   const handleEmailSupport = () => {
-    Linking.openURL("mailto:privacy@visceraconnect.com").catch(() => {});
+    Linking.openURL("mailto:team@viscerastaff.com").catch(() => {});
   };
 
   return (
@@ -194,7 +194,7 @@ const PrivacyPolicyScreen = () => {
             className="flex-row items-center gap-2 bg-white px-3.5 py-2.5 rounded-lg border border-gray-200 self-start"
           >
             <Ionicons name="mail-outline" size={16} color="#0141C5" />
-            <Text className="text-sm font-semibold text-[#0141C5]">privacy@visceraconnect.com</Text>
+            <Text className="text-sm font-semibold text-[#0141C5]">team@viscerastaff.com</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
